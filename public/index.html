@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Library Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <h1 class="logo">
+                        <span class="logo-icon">📚</span>
+                        California Library Tracker
+                    </h1>
+                    <p class="tagline">Discover and track California's public libraries</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Search and Filters -->
+                <section class="search-section">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search libraries by name, city, or county..." class="search-input">
+                            <button id="searchBtn" class="search-btn">🔍</button>
+                        </div>
+                        <div class="filter-container">
+                            <select id="countyFilter" class="filter-select">
+                                <option value="">All Counties</option>
+                            </select>
+                            <button id="addLibraryBtn" class="btn btn-primary">+ Add Library</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stats -->
+                <section class="stats-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalLibraries">0</div>
+                            <div class="stat-label">Libraries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalImages">0</div>
+                            <div class="stat-label">Images</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalVisits">0</div>
+                            <div class="stat-label">Visits</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Libraries Grid -->
+                <section class="libraries-section">
+                    <div class="libraries-grid" id="librariesGrid">
+                        <!-- Libraries will be loaded here -->
+                    </div>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Loading libraries...</p>
+                    </div>
+                    <div class="no-results" id="noResults" style="display: none;">
+                        <p>No libraries found. Try adjusting your search.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Modals -->
+        
+        <!-- Add Library Modal -->
+        <div class="modal" id="addLibraryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Library</h2>
+                    <button class="modal-close" id="closeAddLibraryModal">&times;</button>
+                </div>
+                <form id="addLibraryForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="libraryName">Library Name *</label>
+                        <input type="text" id="libraryName" name="name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="libraryAddress">Address</label>
+                            <input type="text" id="libraryAddress" name="address">
+                        </div>
+                        <div class="form-group">
+                            <label for="libraryCity">City</label>
+                            <input type="text" id="libraryCity" name="city">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="libraryCounty">County</label>
+                            <input type="text" id="libraryCounty" name="county">
+                        </div>
+                        <div class="form-group">
+                            <label for="libraryZip">ZIP Code</label>
+                            <input type="text" id="libraryZip" name="zip_code">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="libraryPhone">Phone</label>
+                            <input type="tel" id="libraryPhone" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="libraryWebsite">Website</label>
+                            <input type="url" id="libraryWebsite" name="website">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="libraryLat">Latitude</label>
+                            <input type="number" id="libraryLat" name="latitude" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label for="libraryLng">Longitude</label>
+                            <input type="number" id="libraryLng" name="longitude" step="any">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelAddLibrary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Library</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Library Detail Modal -->
+        <div class="modal" id="libraryDetailModal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2 id="detailLibraryName">Library Details</h2>
+                    <button class="modal-close" id="closeLibraryDetailModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="library-detail-content">
+                        <div class="library-info">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Address:</label>
+                                    <span id="detailAddress">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>City:</label>
+                                    <span id="detailCity">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>County:</label>
+                                    <span id="detailCounty">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Phone:</label>
+                                    <span id="detailPhone">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Website:</label>
+                                    <a id="detailWebsite" href="#" target="_blank">-</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-tabs">
+                            <button class="tab-btn active" data-tab="images">Images</button>
+                            <button class="tab-btn" data-tab="visits">Visits</button>
+                        </div>
+                        
+                        <div class="tab-content active" id="imagesTab">
+                            <div class="images-section">
+                                <div class="images-header">
+                                    <h3>Library Images</h3>
+                                    <button class="btn btn-primary" id="uploadImageBtn">+ Upload Image</button>
+                                </div>
+                                <div class="images-grid" id="imagesGrid">
+                                    <!-- Images will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="visitsTab">
+                            <div class="visits-section">
+                                <div class="visits-header">
+                                    <h3>Visit History</h3>
+                                    <button class="btn btn-primary" id="addVisitBtn">+ Record Visit</button>
+                                </div>
+                                <div class="visits-list" id="visitsList">
+                                    <!-- Visits will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Image Modal -->
+        <div class="modal" id="uploadImageModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Upload Image</h2>
+                    <button class="modal-close" id="closeUploadImageModal">&times;</button>
+                </div>
+                <form id="uploadImageForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="imageFile">Select Image *</label>
+                        <input type="file" id="imageFile" name="image" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="imageDescription">Description</label>
+                        <textarea id="imageDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadedBy">Your Name</label>
+                        <input type="text" id="uploadedBy" name="uploaded_by">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelUploadImage">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upload Image</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Visit Modal -->
+        <div class="modal" id="addVisitModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Record Visit</h2>
+                    <button class="modal-close" id="closeAddVisitModal">&times;</button>
+                </div>
+                <form id="addVisitForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="visitorName">Your Name</label>
+                        <input type="text" id="visitorName" name="visitor_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="visitNotes">Notes</label>
+                        <textarea id="visitNotes" name="notes" rows="4" placeholder="Share your experience, what you liked, etc..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelAddVisit">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Record Visit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 
