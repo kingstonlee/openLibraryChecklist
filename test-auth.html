@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #718096; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Auth Test</h1>
+    <button id="loginBtn" class="btn btn-secondary">Login</button>
+    <button id="registerBtn" class="btn btn-secondary">Register</button>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div>
+                    <label>Username: <input type="text" name="username" required></label>
+                </div>
+                <div>
+                    <label>Password: <input type="password" name="password" required></label>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('loginModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h2>Register</h2>
+            <form id="registerForm">
+                <div>
+                    <label>Username: <input type="text" name="username" required></label>
+                </div>
+                <div>
+                    <label>Email: <input type="email" name="email" required></label>
+                </div>
+                <div>
+                    <label>Display Name: <input type="text" name="display_name"></label>
+                </div>
+                <div>
+                    <label>Password: <input type="password" name="password" required></label>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('registerModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modalManager = {
+            open(modal) {
+                console.log('Opening modal:', modal);
+                modal.classList.add('active');
+            },
+            close(modal) {
+                console.log('Closing modal:', modal);
+                modal.classList.remove('active');
+            }
+        };
+
+        function closeModal(modalId) {
+            modalManager.close(document.getElementById(modalId));
+        }
+
+        // Event listeners
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            console.log('Login button clicked');
+            modalManager.open(document.getElementById('loginModal'));
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            console.log('Register button clicked');
+            modalManager.open(document.getElementById('registerModal'));
+        });
+
+        // Form handlers
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const credentials = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+            console.log('Login attempt:', credentials);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(credentials)
+                });
+                const result = await response.json();
+                console.log('Login result:', result);
+                if (result.user) {
+                    alert('Login successful!');
+                    modalManager.close(document.getElementById('loginModal'));
+                } else {
+                    alert('Login failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login error: ' + error.message);
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const userData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                display_name: formData.get('display_name')
+            };
+            console.log('Register attempt:', userData);
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const result = await response.json();
+                console.log('Register result:', result);
+                if (result.id) {
+                    alert('Registration successful!');
+                    modalManager.close(document.getElementById('registerModal'));
+                } else {
+                    alert('Registration failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                alert('Register error: ' + error.message);
+            }
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modalManager.close(modal);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
