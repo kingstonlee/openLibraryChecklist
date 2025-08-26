@@ -1,29 +1,52 @@
-# California Library Tracker 📚
+# 📚 California Library Tracker
 
-A modern web application for tracking and discovering California's public libraries with crowdsourced images and visit tracking.
+A comprehensive web application for tracking and exploring California public libraries. Built with Node.js, Express, SQLite, and modern web technologies.
 
-## Features
+![Library Tracker](https://img.shields.io/badge/Node.js-16+-green) ![Express](https://img.shields.io/badge/Express-4.x-blue) ![SQLite](https://img.shields.io/badge/SQLite-3.x-orange) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-- **Library Discovery**: Browse and search California public libraries by name, city, or county
-- **Crowdsourced Images**: Users can upload and share photos of libraries
-- **Visit Tracking**: Record and share your library visits with notes
-- **Modern UI**: Beautiful, responsive design with smooth animations
-- **Real-time Stats**: Track total libraries, images, and visits
-- **Mobile Friendly**: Optimized for all device sizes
+## ✨ Features
 
-## Tech Stack
+### 🏛️ **Library Management**
+- **94 California Libraries**: Comprehensive database of public libraries across California
+- **Library Systems & Branches**: Organized by library systems with multiple branch locations
+- **Search & Filter**: Find libraries by name, county, or library system
+- **Interactive Map**: Visual library locations with details
 
-- **Backend**: Node.js with Express
-- **Database**: SQLite (perfect for free hosting)
-- **Frontend**: Vanilla JavaScript with modern CSS
-- **Image Processing**: Sharp for optimized image uploads
-- **Security**: Helmet.js for security headers
-- **Performance**: Compression middleware
+### 👥 **User System**
+- **User Registration & Login**: Secure authentication system
+- **Personal Profiles**: Track your library visits and contributions
+- **Visit History**: Record and rate your library visits
+- **Library Goals**: Create personal checklists of libraries to visit
 
-## Quick Start
+### 📸 **Image Crowdsourcing**
+- **Photo Uploads**: Users can upload photos of libraries
+- **Image Management**: Automatic resizing and optimization
+- **Gallery View**: Browse library photos contributed by the community
+
+### 🔐 **Admin Verification System**
+- **Library Submissions**: Users can submit new libraries for verification
+- **Admin Review**: Admin users can approve/reject submissions
+- **Quality Control**: Ensures data accuracy and prevents spam
+- **Admin Toggle**: Easy enable/disable of admin privileges
+
+### 📊 **Statistics & Analytics**
+- **Visit Tracking**: Monitor library visit statistics
+- **User Activity**: Track user contributions and engagement
+- **County Exploration**: See which counties you've explored
+- **Progress Metrics**: Visual progress indicators
+
+## 🛠️ Technology Stack
+
+- **Backend**: Node.js, Express.js
+- **Database**: SQLite3
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Image Processing**: Sharp, Multer
+- **Security**: Helmet.js, Compression
+- **Hosting**: Dreamhost Apps compatible
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js 16+ 
 - npm or yarn
 
@@ -31,8 +54,8 @@ A modern web application for tracking and discovering California's public librar
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd openLibraryChecklist
+   git clone https://github.com/YOUR_USERNAME/california-library-tracker.git
+   cd california-library-tracker
    ```
 
 2. **Install dependencies**
@@ -40,195 +63,142 @@ A modern web application for tracking and discovering California's public librar
    npm install
    ```
 
-3. **Populate the database with California libraries**
-   ```bash
-   node scripts/populate-libraries.js
-   ```
-
-4. **Start the development server**
+3. **Start the development server**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
-   Visit `http://localhost:3000`
+4. **Open your browser**
+   ```
+   http://localhost:3000
+   ```
 
-## Project Structure
+### Database Setup
+
+The database will be automatically created on first run. To populate with initial library data:
+
+```bash
+# Start the server first (to create database)
+node server.js &
+# Then populate libraries
+node scripts/populate-libraries.js
+```
+
+### Admin Setup
+
+Create admin users for the verification system:
+
+```bash
+# Make a user an admin
+node scripts/setup-admin.js add <username> admin
+
+# List all admin users
+node scripts/setup-admin.js list
+```
+
+## 📁 Project Structure
 
 ```
-openLibraryChecklist/
+california-library-tracker/
 ├── server.js                 # Main Express server
 ├── package.json             # Dependencies and scripts
-├── library.db              # SQLite database (created on first run)
-├── public/                 # Static files
-│   ├── index.html          # Main HTML file
-│   ├── css/
-│   │   └── style.css       # Main stylesheet
-│   ├── js/
-│   │   └── app.js          # Frontend JavaScript
+├── library.db               # SQLite database
+├── public/                  # Static files
+│   ├── index.html          # Main application page
+│   ├── css/style.css       # Stylesheets
+│   ├── js/app.js           # Frontend JavaScript
 │   └── uploads/            # User uploaded images
-├── scripts/
-│   └── populate-libraries.js # Database population script
-└── README.md               # This file
+├── scripts/                # Utility scripts
+│   ├── populate-libraries.js  # Database population
+│   └── setup-admin.js         # Admin user management
+└── docs/                   # Documentation
+    ├── VERIFICATION_SYSTEM.md
+    ├── DEPLOYMENT.md
+    └── BRANCHING_STRATEGY.md
 ```
 
-## API Endpoints
+## 🔧 API Endpoints
 
 ### Libraries
 - `GET /api/libraries` - Get all libraries
 - `GET /api/libraries/:id` - Get specific library
-- `POST /api/libraries` - Add new library
-- `GET /api/search?q=query&county=county` - Search libraries
+- `POST /api/libraries` - Submit new library (requires verification)
+- `GET /api/search` - Search libraries
 
-### Images
-- `GET /api/libraries/:id/images` - Get library images
-- `POST /api/libraries/:id/images` - Upload image
+### User Management
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/users/:id` - Get user profile
+- `GET /api/users/:id/stats` - Get user statistics
 
-### Visits
-- `GET /api/libraries/:id/visits` - Get library visits
-- `POST /api/libraries/:id/visits` - Record visit
+### Admin Functions
+- `GET /api/admin/pending-libraries` - Get pending submissions
+- `POST /api/admin/pending-libraries/:id/approve` - Approve library
+- `POST /api/admin/pending-libraries/:id/reject` - Reject library
+- `POST /api/users/:id/toggle-admin` - Toggle admin mode
 
-### Utilities
-- `GET /api/counties` - Get all counties
+## 🎯 Key Features in Detail
 
-## Deployment to Dreamhost Apps
+### Library Verification System
+- **User Submissions**: New libraries go to pending status
+- **Admin Review**: Admins can approve/reject with notes
+- **Quality Control**: Prevents spam and ensures accuracy
+- **Audit Trail**: Complete history of submissions and reviews
 
-### 1. Prepare Your App
+### User Experience
+- **Responsive Design**: Works on desktop and mobile
+- **Real-time Updates**: Live notifications and status changes
+- **Intuitive Interface**: Clean, modern UI with smooth interactions
+- **Progress Tracking**: Visual indicators for user goals
 
-1. **Ensure all files are committed**
-   ```bash
-   git add .
-   git commit -m "Ready for deployment"
-   ```
+### Admin Panel
+- **Pending Reviews**: Easy-to-use interface for library submissions
+- **User Management**: View and manage admin users
+- **Toggle Admin Mode**: Enable/disable admin privileges
+- **Statistics Dashboard**: Overview of system activity
 
-2. **Create a `.gitignore` file** (if not exists)
-   ```
-   node_modules/
-   .env
-   *.log
-   ```
+## 🚀 Deployment
 
-### 2. Dreamhost Apps Setup
+### Dreamhost Apps Deployment
+This app is designed to be deployed on Dreamhost Apps for free hosting. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-1. **Log into Dreamhost Panel**
-   - Go to Domains → Manage Domains
-   - Add your domain or subdomain
+### Other Hosting Options
+- **Heroku**: Compatible with Heroku's free tier
+- **Vercel**: Can be adapted for serverless deployment
+- **Railway**: Easy deployment with automatic scaling
 
-2. **Create a Dreamhost App**
-   - Go to Domains → Dreamhost Apps
-   - Click "Create App"
-   - Choose "Node.js" as the runtime
-   - Select your domain
-   - Set the source directory to your app folder
+## 🤝 Contributing
 
-3. **Configure Environment**
-   - Set the start command to: `node server.js`
-   - Set the Node.js version to: `16.x` or higher
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
 
-### 3. Deploy
+### Development Guidelines
+- Follow existing code style
+- Add tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting
 
-1. **Push to your repository**
-   ```bash
-   git push origin main
-   ```
+## 📝 License
 
-2. **Connect to Dreamhost**
-   - In Dreamhost Apps, connect your Git repository
-   - Set the branch to `main`
-   - Deploy the app
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### 4. Post-Deployment
+## 🙏 Acknowledgments
 
-1. **SSH into your server** (if needed)
-   ```bash
-   ssh username@your-domain.com
-   ```
+- **California Public Libraries**: For providing the foundation data
+- **Open Source Community**: For the amazing tools and libraries
+- **Library Enthusiasts**: For inspiration and feedback
 
-2. **Install dependencies and populate database**
-   ```bash
-   cd /home/username/your-app-directory
-   npm install
-   node scripts/populate-libraries.js
-   ```
+## 📞 Support
 
-3. **Restart the app** in Dreamhost panel
-
-## Environment Variables
-
-Create a `.env` file for local development:
-
-```env
-PORT=3000
-NODE_ENV=development
-```
-
-## Database Management
-
-### Reset Database
-```bash
-rm library.db
-node server.js  # This will recreate the database
-node scripts/populate-libraries.js
-```
-
-### Backup Database
-```bash
-cp library.db library-backup-$(date +%Y%m%d).db
-```
-
-## Adding More Libraries
-
-To add more California libraries, edit `scripts/populate-libraries.js` and add library objects to the `californiaLibraries` array:
-
-```javascript
-{
-    name: "Library Name",
-    address: "123 Main St",
-    city: "City Name",
-    county: "County Name",
-    zip_code: "90210",
-    phone: "(555) 123-4567",
-    website: "https://library.org",
-    latitude: 34.0522,
-    longitude: -118.2437
-}
-```
-
-Then run:
-```bash
-node scripts/populate-libraries.js
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-MIT License - feel free to use this project for your own library tracking needs!
-
-## Support
-
-For issues or questions:
-1. Check the existing issues
-2. Create a new issue with detailed information
-3. Include your Node.js version and operating system
-
-## Roadmap
-
-- [ ] Map integration with library locations
-- [ ] User accounts and profiles
-- [ ] Library ratings and reviews
-- [ ] Events and programs tracking
-- [ ] Mobile app version
-- [ ] API rate limiting
-- [ ] Image moderation system
-- [ ] Export/import functionality
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/california-library-tracker/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/california-library-tracker/discussions)
+- **Email**: [Your Email]
 
 ---
 
-**Happy Library Tracking! 📚✨** 
+**Made with ❤️ for California's library community**
+
+*Help us build the most comprehensive library tracking system in California!* 
