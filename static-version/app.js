@@ -805,6 +805,9 @@ const tabManager = {
 
 // Event listeners
 function initEventListeners() {
+    // Initialize view buttons (Grid/List)
+    initViewButtons();
+    
     // Modal close buttons
     elements.closeAddLibraryModal.addEventListener('click', () => modalManager.close(elements.addLibraryModal));
     elements.closeLibraryDetailModal.addEventListener('click', () => modalManager.close(elements.libraryDetailModal));
@@ -931,8 +934,24 @@ function initViewButtons() {
     const viewButtons = document.querySelectorAll('.view-btn');
     const librariesGrid = document.getElementById('librariesGrid');
     
+    console.log('Initializing view buttons...');
+    console.log('Found view buttons:', viewButtons.length);
+    console.log('Found libraries grid:', librariesGrid);
+    
+    if (viewButtons.length === 0) {
+        console.warn('No view buttons found!');
+        return;
+    }
+    
+    if (!librariesGrid) {
+        console.warn('Libraries grid element not found!');
+        return;
+    }
+    
     viewButtons.forEach(button => {
         button.addEventListener('click', () => {
+            console.log('View button clicked:', button.getAttribute('data-view'));
+            
             // Remove active class from all buttons
             viewButtons.forEach(btn => btn.classList.remove('active'));
             // Add active class to clicked button
@@ -941,11 +960,17 @@ function initViewButtons() {
             const view = button.getAttribute('data-view');
             if (view === 'grid') {
                 librariesGrid.className = 'libraries-grid';
+                console.log('Switched to grid view');
+                utils.showNotification('Switched to Grid View', 'info', 2000);
             } else if (view === 'list') {
                 librariesGrid.className = 'libraries-list';
+                console.log('Switched to list view');
+                utils.showNotification('Switched to List View', 'info', 2000);
             }
         });
     });
+    
+    console.log('View buttons initialized successfully');
 }
 
 // Initialize tabs
