@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Library Tracker - Static Version</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">📚</span>
+                    California Library Tracker
+                </h1>
+                <div class="header-actions">
+                    <button id="syncBtn" class="btn btn-outline" title="Data Sync & Backup">📱 Sync</button>
+                    <button id="loginBtn" class="btn btn-outline">Login</button>
+                    <button id="registerBtn" class="btn btn-outline">Register</button>
+                    <button id="userProfileBtn" class="btn btn-primary" style="display: none;">Profile</button>
+                    <button id="logoutBtn" class="btn btn-outline" style="display: none;">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Search and Filters -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search libraries..." class="search-input">
+                    <select id="countyFilter" class="filter-select">
+                        <option value="">All Counties</option>
+                    </select>
+                    <select id="librarySystemFilter" class="filter-select">
+                        <option value="">All Library Systems</option>
+                    </select>
+                    <button id="addLibraryBtn" class="btn btn-primary">Add Library</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalLibraries">0</div>
+                        <div class="stat-label">Libraries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalImages">0</div>
+                        <div class="stat-label">Images</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalVisits">0</div>
+                        <div class="stat-label">Visits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Users</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Libraries Grid -->
+            <div class="libraries-section">
+                <div class="section-header">
+                    <h2>California Libraries</h2>
+                    <div class="view-controls">
+                        <button class="view-btn active" data-view="grid">Grid</button>
+                        <button class="view-btn" data-view="list">List</button>
+                    </div>
+                </div>
+                <div id="librariesGrid" class="libraries-grid">
+                    <!-- Libraries will be loaded here -->
+                </div>
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading libraries...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="addLibraryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Library</h2>
+                <button class="modal-close" id="closeAddLibraryModal">&times;</button>
+            </div>
+            <form id="addLibraryForm" class="modal-form">
+                <div class="form-group">
+                    <label for="libraryName">Library Name *</label>
+                    <input type="text" id="libraryName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="librarySystem">Library System</label>
+                    <input type="text" id="librarySystem" name="library_system">
+                </div>
+                <div class="form-group">
+                    <label for="branchName">Branch Name</label>
+                    <input type="text" id="branchName" name="branch_name">
+                </div>
+                <div class="form-group">
+                    <label for="libraryAddress">Address</label>
+                    <input type="text" id="libraryAddress" name="address">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="libraryCity">City</label>
+                        <input type="text" id="libraryCity" name="city">
+                    </div>
+                    <div class="form-group">
+                        <label for="libraryCounty">County</label>
+                        <input type="text" id="libraryCounty" name="county">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="libraryZip">ZIP Code</label>
+                        <input type="text" id="libraryZip" name="zip_code">
+                    </div>
+                    <div class="form-group">
+                        <label for="libraryPhone">Phone</label>
+                        <input type="tel" id="libraryPhone" name="phone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="libraryWebsite">Website</label>
+                    <input type="url" id="libraryWebsite" name="website">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelAddLibrary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Library</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Library Detail Modal -->
+    <div class="modal" id="libraryDetailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="detailLibraryName">Library Name</h2>
+                <button class="modal-close" id="closeLibraryDetailModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="library-detail-content">
+                    <div class="library-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Address:</strong>
+                                <span id="detailAddress">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>City:</strong>
+                                <span id="detailCity">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>County:</strong>
+                                <span id="detailCounty">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Phone:</strong>
+                                <span id="detailPhone">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Website:</strong>
+                                <a id="detailWebsite" href="#" target="_blank">-</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="library-tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="images">Images</button>
+                            <button class="tab-btn" data-tab="visits">Visits</button>
+                        </div>
+                        
+                        <div class="tab-content">
+                            <div id="imagesTab" class="tab-pane active">
+                                <div class="tab-header">
+                                    <h3>Library Images</h3>
+                                    <button id="uploadImageBtn" class="btn btn-primary">Upload Image</button>
+                                </div>
+                                <div id="imagesGrid" class="images-grid">
+                                    <!-- Images will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div id="visitsTab" class="tab-pane">
+                                <div class="tab-header">
+                                    <h3>Library Visits</h3>
+                                    <button id="addVisitBtn" class="btn btn-primary">Record Visit</button>
+                                </div>
+                                <div id="visitsList" class="visits-list">
+                                    <!-- Visits will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Image Modal -->
+    <div class="modal" id="uploadImageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload Library Image</h2>
+                <button class="modal-close" id="closeUploadImageModal">&times;</button>
+            </div>
+            <form id="uploadImageForm" class="modal-form">
+                <div class="form-group">
+                    <label for="imageFile">Select Image *</label>
+                    <input type="file" id="imageFile" name="image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageCaption">Caption</label>
+                    <textarea id="imageCaption" name="caption" rows="3" placeholder="Describe this image..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelUploadImage">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Visit Modal -->
+    <div class="modal" id="addVisitModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Record Library Visit</h2>
+                <button class="modal-close" id="closeAddVisitModal">&times;</button>
+            </div>
+            <form id="addVisitForm" class="modal-form">
+                <div class="form-group">
+                    <label for="visitorName">Visitor Name *</label>
+                    <input type="text" id="visitorName" name="visitor_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="visitRating">Rating (1-5 stars)</label>
+                    <select id="visitRating" name="rating">
+                        <option value="">No rating</option>
+                        <option value="1">⭐ 1 star</option>
+                        <option value="2">⭐⭐ 2 stars</option>
+                        <option value="3">⭐⭐⭐ 3 stars</option>
+                        <option value="4">⭐⭐⭐⭐ 4 stars</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 5 stars</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="visitNotes">Notes</label>
+                    <textarea id="visitNotes" name="notes" rows="4" placeholder="Share your experience, what you liked, etc..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelAddVisit">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Record Visit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <button class="modal-close" id="closeLoginModal">&times;</button>
+            </div>
+            <form id="loginForm" class="modal-form">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelLogin">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="modal-close" id="closeRegisterModal">&times;</button>
+            </div>
+            <form id="registerForm" class="modal-form">
+                <div class="form-group">
+                    <label for="registerUsername">Username *</label>
+                    <input type="text" id="registerUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email *</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerDisplayName">Display Name</label>
+                    <input type="text" id="registerDisplayName" name="display_name">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password *</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelRegister">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div class="modal" id="userProfileModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Your Profile</h2>
+                <button class="modal-close" id="closeUserProfileModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userProfileContent">
+                    <!-- User profile content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Admin Panel - Pending Libraries</h2>
+                <button class="modal-close" id="closeAdminModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="adminContent">
+                    <!-- Admin content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Users Modal -->
+    <div class="modal" id="adminUsersModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Admin Panel - Manage Admin Users</h2>
+                <button class="modal-close" id="closeAdminUsersModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="adminUsersContent">
+                    <!-- Admin users content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Settings Modal -->
+    <div class="modal" id="syncModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>📱 Data Sync & Backup</h2>
+                <button class="modal-close" id="closeSyncModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sync-section">
+                    <h3>🔄 Sync Status</h3>
+                    <div id="syncStatus" class="sync-status">
+                        <!-- Sync status will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>💾 Backup & Restore</h3>
+                    <div class="sync-actions">
+                        <button class="btn btn-primary" id="downloadBackupBtn">
+                            📥 Download Backup
+                        </button>
+                        <button class="btn btn-secondary" id="uploadBackupBtn">
+                            📤 Upload Backup
+                        </button>
+                        <input type="file" id="backupFileInput" accept=".json" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>☁️ Cloud Sync</h3>
+                    <div class="sync-actions">
+                        <button class="btn btn-primary" id="syncToCloudBtn">
+                            ☁️ Sync to Cloud
+                        </button>
+                        <button class="btn btn-secondary" id="restoreFromCloudBtn">
+                            ⬇️ Restore from Cloud
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>📊 Data Export</h3>
+                    <div class="sync-actions">
+                        <button class="btn btn-secondary" id="exportDataBtn">
+                            📋 Export Data
+                        </button>
+                        <button class="btn btn-secondary" id="showDataBtn">
+                            👁️ View Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>⚠️ Advanced</h3>
+                    <div class="sync-actions">
+                        <button class="btn btn-danger" id="clearAllDataBtn">
+                            🗑️ Clear All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="library-updater.js"></script>
+    <script src="cloud-sync.js"></script>
+    <script src="app.js"></script>
+    <script src="add-more-libraries.js"></script>
+</body>
+</html> 

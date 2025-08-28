@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Tracker Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Library Tracker Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Test Results:</h2>
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Manual Tests:</h2>
+        <button onclick="testDataFile()">Test Data File</button>
+        <button onclick="testDatabase()">Test Database</button>
+        <button onclick="forceLoadLibraries()">Force Load Libraries</button>
+        <button onclick="clearDatabase()">Clear Database</button>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        const results = document.getElementById('testResults');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Check if data.js loaded
+        function testDataFile() {
+            log('Testing data.js file...');
+            
+            if (typeof CALIFORNIA_LIBRARIES !== 'undefined') {
+                log(`✅ CALIFORNIA_LIBRARIES loaded successfully!`, 'success');
+                log(`📚 Found ${CALIFORNIA_LIBRARIES.length} libraries`, 'info');
+                log(`🏛️ First library: ${CALIFORNIA_LIBRARIES[0].name}`, 'info');
+            } else {
+                log(`❌ CALIFORNIA_LIBRARIES not found!`, 'error');
+            }
+        }
+        
+        // Test 2: Check IndexedDB
+        async function testDatabase() {
+            log('Testing IndexedDB...');
+            
+            try {
+                const request = indexedDB.open('LibraryTracker', 1);
+                
+                request.onerror = () => {
+                    log(`❌ IndexedDB error: ${request.error}`, 'error');
+                };
+                
+                request.onsuccess = () => {
+                    log(`✅ IndexedDB opened successfully!`, 'success');
+                    const db = request.result;
+                    log(`🗄️ Database name: ${db.name}`, 'info');
+                    log(`📊 Object stores: ${db.objectStoreNames.length}`, 'info');
+                    
+                    // Check if libraries store exists
+                    if (db.objectStoreNames.contains('libraries')) {
+                        log(`✅ Libraries store exists!`, 'success');
+                        
+                        // Count libraries
+                        const transaction = db.transaction(['libraries'], 'readonly');
+                        const store = transaction.objectStore('libraries');
+                        const countRequest = store.count();
+                        
+                        countRequest.onsuccess = () => {
+                            log(`📚 Found ${countRequest.result} libraries in database`, 'info');
+                        };
+                        
+                        countRequest.onerror = () => {
+                            log(`❌ Error counting libraries: ${countRequest.error}`, 'error');
+                        };
+                    } else {
+                        log(`❌ Libraries store not found!`, 'error');
+                    }
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    log(`🔄 Database upgrade needed`, 'info');
+                };
+                
+            } catch (error) {
+                log(`❌ IndexedDB test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Force load libraries
+        async function forceLoadLibraries() {
+            log('Force loading libraries...');
+            
+            if (typeof CALIFORNIA_LIBRARIES === 'undefined') {
+                log(`❌ CALIFORNIA_LIBRARIES not available!`, 'error');
+                return;
+            }
+            
+            try {
+                const request = indexedDB.open('LibraryTracker', 1);
+                
+                request.onsuccess = () => {
+                    const db = request.result;
+                    
+                    // Clear existing libraries
+                    const clearTransaction = db.transaction(['libraries'], 'readwrite');
+                    const clearStore = clearTransaction.objectStore('libraries');
+                    const clearRequest = clearStore.clear();
+                    
+                    clearRequest.onsuccess = () => {
+                        log(`🗑️ Cleared existing libraries`, 'info');
+                        
+                        // Add new libraries
+                        let added = 0;
+                        for (const library of CALIFORNIA_LIBRARIES) {
+                            const addTransaction = db.transaction(['libraries'], 'readwrite');
+                            const addStore = addTransaction.objectStore('libraries');
+                            const addRequest = addStore.add(library);
+                            
+                            addRequest.onsuccess = () => {
+                                added++;
+                                if (added === CALIFORNIA_LIBRARIES.length) {
+                                    log(`✅ Successfully added ${added} libraries!`, 'success');
+                                }
+                            };
+                            
+                            addRequest.onerror = () => {
+                                log(`❌ Error adding library: ${addRequest.error}`, 'error');
+                            };
+                        }
+                    };
+                    
+                    clearRequest.onerror = () => {
+                        log(`❌ Error clearing libraries: ${clearRequest.error}`, 'error');
+                    };
+                };
+                
+            } catch (error) {
+                log(`❌ Force load failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Clear database
+        async function clearDatabase() {
+            log('Clearing database...');
+            
+            try {
+                const request = indexedDB.deleteDatabase('LibraryTracker');
+                
+                request.onsuccess = () => {
+                    log(`✅ Database cleared successfully!`, 'success');
+                };
+                
+                request.onerror = () => {
+                    log(`❌ Error clearing database: ${request.error}`, 'error');
+                };
+                
+            } catch (error) {
+                log(`❌ Clear database failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('Page loaded, running tests...');
+            setTimeout(() => {
+                testDataFile();
+                setTimeout(() => {
+                    testDatabase();
+                }, 500);
+            }, 100);
+        });
+    </script>
+</body>
+</html> 

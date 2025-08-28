@@ -1,0 +1,505 @@
+// California Libraries Data for Static Version
+// This file contains preset library data that will be loaded into IndexedDB
+
+const CALIFORNIA_LIBRARIES = [
+    // Los Angeles Public Library System
+    {
+        name: "Los Angeles Public Library - Central Library",
+        library_system: "Los Angeles Public Library",
+        branch_name: "Central Library",
+        address: "630 W 5th St",
+        city: "Los Angeles",
+        county: "Los Angeles",
+        zip_code: "90071",
+        phone: "(213) 228-7000",
+        website: "https://www.lapl.org/",
+        latitude: 34.0505,
+        longitude: -118.2544,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Los Angeles Public Library - Echo Park Branch",
+        library_system: "Los Angeles Public Library",
+        branch_name: "Echo Park Branch",
+        address: "1410 W Temple St",
+        city: "Los Angeles",
+        county: "Los Angeles",
+        zip_code: "90026",
+        phone: "(213) 250-7808",
+        website: "https://www.lapl.org/branches/echo-park",
+        latitude: 34.0777,
+        longitude: -118.2589,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Los Angeles Public Library - Hollywood Branch",
+        library_system: "Los Angeles Public Library",
+        branch_name: "Hollywood Branch",
+        address: "1623 Ivar Ave",
+        city: "Los Angeles",
+        county: "Los Angeles",
+        zip_code: "90028",
+        phone: "(323) 856-8260",
+        website: "https://www.lapl.org/branches/hollywood",
+        latitude: 34.1016,
+        longitude: -118.3264,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Los Angeles Public Library - Venice Branch",
+        library_system: "Los Angeles Public Library",
+        branch_name: "Venice Branch",
+        address: "501 S Venice Blvd",
+        city: "Los Angeles",
+        county: "Los Angeles",
+        zip_code: "90291",
+        phone: "(310) 821-1769",
+        website: "https://www.lapl.org/branches/venice",
+        latitude: 33.9850,
+        longitude: -118.4695,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Los Angeles Public Library - Westwood Branch",
+        library_system: "Los Angeles Public Library",
+        branch_name: "Westwood Branch",
+        address: "1246 Glendon Ave",
+        city: "Los Angeles",
+        county: "Los Angeles",
+        zip_code: "90024",
+        phone: "(310) 575-9423",
+        website: "https://www.lapl.org/branches/westwood",
+        latitude: 34.0597,
+        longitude: -118.4428,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // San Francisco Public Library System
+    {
+        name: "San Francisco Public Library - Main Library",
+        library_system: "San Francisco Public Library",
+        branch_name: "Main Library",
+        address: "100 Larkin St",
+        city: "San Francisco",
+        county: "San Francisco",
+        zip_code: "94102",
+        phone: "(415) 557-4400",
+        website: "https://sfpl.org/locations/main-library",
+        latitude: 37.7793,
+        longitude: -122.4163,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Francisco Public Library - Mission Bay Branch",
+        library_system: "San Francisco Public Library",
+        branch_name: "Mission Bay Branch",
+        address: "960 4th St",
+        city: "San Francisco",
+        county: "San Francisco",
+        zip_code: "94158",
+        phone: "(415) 355-2838",
+        website: "https://sfpl.org/locations/mission-bay-branch",
+        latitude: 37.7701,
+        longitude: -122.3874,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Francisco Public Library - North Beach Branch",
+        library_system: "San Francisco Public Library",
+        branch_name: "North Beach Branch",
+        address: "850 Columbus Ave",
+        city: "San Francisco",
+        county: "San Francisco",
+        zip_code: "94133",
+        phone: "(415) 355-5626",
+        website: "https://sfpl.org/locations/north-beach-branch",
+        latitude: 37.8037,
+        longitude: -122.4098,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Francisco Public Library - Chinatown Branch",
+        library_system: "San Francisco Public Library",
+        branch_name: "Chinatown Branch",
+        address: "1135 Powell St",
+        city: "San Francisco",
+        county: "San Francisco",
+        zip_code: "94108",
+        phone: "(415) 355-2888",
+        website: "https://sfpl.org/locations/chinatown-branch",
+        latitude: 37.7941,
+        longitude: -122.4079,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Francisco Public Library - Richmond Branch",
+        library_system: "San Francisco Public Library",
+        branch_name: "Richmond Branch",
+        address: "351 9th Ave",
+        city: "San Francisco",
+        county: "San Francisco",
+        zip_code: "94118",
+        phone: "(415) 355-5600",
+        website: "https://sfpl.org/locations/richmond-branch",
+        latitude: 37.7833,
+        longitude: -122.4667,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // San Diego Public Library System
+    {
+        name: "San Diego Public Library - Central Library",
+        library_system: "San Diego Public Library",
+        branch_name: "Central Library",
+        address: "330 Park Blvd",
+        city: "San Diego",
+        county: "San Diego",
+        zip_code: "92101",
+        phone: "(619) 236-5800",
+        website: "https://www.sandiego.gov/public-library/locations/central",
+        latitude: 32.7157,
+        longitude: -117.1611,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Diego Public Library - Mission Valley Branch",
+        library_system: "San Diego Public Library",
+        branch_name: "Mission Valley Branch",
+        address: "2123 Fenton Pkwy",
+        city: "San Diego",
+        county: "San Diego",
+        zip_code: "92108",
+        phone: "(619) 235-5275",
+        website: "https://www.sandiego.gov/public-library/locations/mission-valley",
+        latitude: 32.7833,
+        longitude: -117.1333,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "San Diego Public Library - La Jolla Branch",
+        library_system: "San Diego Public Library",
+        branch_name: "La Jolla Branch",
+        address: "7555 Draper Ave",
+        city: "San Diego",
+        county: "San Diego",
+        zip_code: "92037",
+        phone: "(858) 552-1657",
+        website: "https://www.sandiego.gov/public-library/locations/la-jolla",
+        latitude: 32.8328,
+        longitude: -117.2713,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Sacramento Public Library System
+    {
+        name: "Sacramento Public Library - Central Library",
+        library_system: "Sacramento Public Library",
+        branch_name: "Central Library",
+        address: "828 I St",
+        city: "Sacramento",
+        county: "Sacramento",
+        zip_code: "95814",
+        phone: "(916) 264-2700",
+        website: "https://www.saclibrary.org/locations/central-library",
+        latitude: 38.5816,
+        longitude: -121.4944,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Sacramento Public Library - Belle Cooledge Branch",
+        library_system: "Sacramento Public Library",
+        branch_name: "Belle Cooledge Branch",
+        address: "5600 S Land Park Dr",
+        city: "Sacramento",
+        county: "Sacramento",
+        zip_code: "95822",
+        phone: "(916) 264-2920",
+        website: "https://www.saclibrary.org/locations/belle-cooledge",
+        latitude: 38.5500,
+        longitude: -121.4833,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Oakland Public Library System
+    {
+        name: "Oakland Public Library - Main Library",
+        library_system: "Oakland Public Library",
+        branch_name: "Main Library",
+        address: "125 14th St",
+        city: "Oakland",
+        county: "Alameda",
+        zip_code: "94612",
+        phone: "(510) 238-3134",
+        website: "https://oaklandlibrary.org/locations/main-library",
+        latitude: 37.8044,
+        longitude: -122.2711,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Oakland Public Library - Rockridge Branch",
+        library_system: "Oakland Public Library",
+        branch_name: "Rockridge Branch",
+        address: "5366 College Ave",
+        city: "Oakland",
+        county: "Alameda",
+        zip_code: "94618",
+        phone: "(510) 597-5017",
+        website: "https://oaklandlibrary.org/locations/rockridge",
+        latitude: 37.8500,
+        longitude: -122.2500,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Fresno County Public Library System
+    {
+        name: "Fresno County Public Library - Central Library",
+        library_system: "Fresno County Public Library",
+        branch_name: "Central Library",
+        address: "2420 Mariposa St",
+        city: "Fresno",
+        county: "Fresno",
+        zip_code: "93721",
+        phone: "(559) 600-7323",
+        website: "https://www.fresnolibrary.org/locations/central",
+        latitude: 36.7378,
+        longitude: -119.7871,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Long Beach Public Library System
+    {
+        name: "Long Beach Public Library - Main Library",
+        library_system: "Long Beach Public Library",
+        branch_name: "Main Library",
+        address: "101 Pacific Ave",
+        city: "Long Beach",
+        county: "Los Angeles",
+        zip_code: "90802",
+        phone: "(562) 570-7500",
+        website: "https://www.lbpl.org/locations/main",
+        latitude: 33.7701,
+        longitude: -118.1937,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Santa Monica Public Library System
+    {
+        name: "Santa Monica Public Library - Main Library",
+        library_system: "Santa Monica Public Library",
+        branch_name: "Main Library",
+        address: "601 Santa Monica Blvd",
+        city: "Santa Monica",
+        county: "Los Angeles",
+        zip_code: "90401",
+        phone: "(310) 458-8600",
+        website: "https://smpl.org/locations/main-library",
+        latitude: 34.0195,
+        longitude: -118.4912,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+    {
+        name: "Santa Monica Public Library - Montana Branch",
+        library_system: "Santa Monica Public Library",
+        branch_name: "Montana Branch",
+        address: "1704 Montana Ave",
+        city: "Santa Monica",
+        county: "Los Angeles",
+        zip_code: "90403",
+        phone: "(310) 458-8682",
+        website: "https://smpl.org/locations/montana-branch",
+        latitude: 34.0333,
+        longitude: -118.4833,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Pasadena Public Library System
+    {
+        name: "Pasadena Public Library - Central Library",
+        library_system: "Pasadena Public Library",
+        branch_name: "Central Library",
+        address: "285 E Walnut St",
+        city: "Pasadena",
+        county: "Los Angeles",
+        zip_code: "91101",
+        phone: "(626) 744-4066",
+        website: "https://www.cityofpasadena.net/library/locations/central-library",
+        latitude: 34.1478,
+        longitude: -118.1445,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Berkeley Public Library System
+    {
+        name: "Berkeley Public Library - Central Library",
+        library_system: "Berkeley Public Library",
+        branch_name: "Central Library",
+        address: "2090 Kittredge St",
+        city: "Berkeley",
+        county: "Alameda",
+        zip_code: "94704",
+        phone: "(510) 981-6100",
+        website: "https://www.berkeleypubliclibrary.org/locations/central",
+        latitude: 37.8716,
+        longitude: -122.2727,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // San Jose Public Library System
+    {
+        name: "San Jose Public Library - Dr. Martin Luther King Jr. Library",
+        library_system: "San Jose Public Library",
+        branch_name: "Dr. Martin Luther King Jr. Library",
+        address: "150 E San Fernando St",
+        city: "San Jose",
+        county: "Santa Clara",
+        zip_code: "95112",
+        phone: "(408) 808-2000",
+        website: "https://www.sjpl.org/locations/mlk",
+        latitude: 37.3382,
+        longitude: -121.8863,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Anaheim Public Library System
+    {
+        name: "Anaheim Public Library - Central Library",
+        library_system: "Anaheim Public Library",
+        branch_name: "Central Library",
+        address: "500 W Broadway",
+        city: "Anaheim",
+        county: "Orange",
+        zip_code: "92805",
+        phone: "(714) 765-1880",
+        website: "https://www.anaheim.net/354/Library",
+        latitude: 33.8366,
+        longitude: -117.9143,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Riverside Public Library System
+    {
+        name: "Riverside Public Library - Main Library",
+        library_system: "Riverside Public Library",
+        branch_name: "Main Library",
+        address: "3581 Mission Inn Ave",
+        city: "Riverside",
+        county: "Riverside",
+        zip_code: "92501",
+        phone: "(951) 826-5201",
+        website: "https://www.riversideca.gov/library/locations/main",
+        latitude: 33.9533,
+        longitude: -117.3962,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Bakersfield Public Library System
+    {
+        name: "Bakersfield Public Library - Beale Memorial Library",
+        library_system: "Bakersfield Public Library",
+        branch_name: "Beale Memorial Library",
+        address: "701 Truxtun Ave",
+        city: "Bakersfield",
+        county: "Kern",
+        zip_code: "93301",
+        phone: "(661) 868-0701",
+        website: "https://www.bakersfieldpubliclibrary.org/locations/beale",
+        latitude: 35.3733,
+        longitude: -119.0187,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Stockton Public Library System
+    {
+        name: "Stockton Public Library - Cesar Chavez Central Library",
+        library_system: "Stockton Public Library",
+        branch_name: "Cesar Chavez Central Library",
+        address: "605 N El Dorado St",
+        city: "Stockton",
+        county: "San Joaquin",
+        zip_code: "95202",
+        phone: "(209) 937-8221",
+        website: "https://www.stocktonca.gov/libraries",
+        latitude: 37.9577,
+        longitude: -121.2908,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    },
+
+    // Modesto Public Library System
+    {
+        name: "Modesto Public Library - Modesto Library",
+        library_system: "Modesto Public Library",
+        branch_name: "Modesto Library",
+        address: "1500 I St",
+        city: "Modesto",
+        county: "Stanislaus",
+        zip_code: "95354",
+        phone: "(209) 558-7800",
+        website: "https://www.modestogov.com/library",
+        latitude: 37.6391,
+        longitude: -120.9969,
+        created_at: new Date().toISOString(),
+        image_count: 0,
+        visit_count: 0
+    }
+];
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { CALIFORNIA_LIBRARIES };
+} 
