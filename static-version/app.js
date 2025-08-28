@@ -473,18 +473,26 @@ const libraryManager = {
         }
         
         elements.librariesGrid.innerHTML = librariesToRender.map(library => `
-            <div class="library-card" onclick="libraryManager.openLibraryDetail(${library.id})">
-                <div class="library-header">
-                    <h3>${library.name}</h3>
-                    ${library.library_system ? `<span class="library-system">${library.library_system}</span>` : ''}
-                </div>
+            <div class="library-card">
                 <div class="library-info">
+                    <div class="library-header">
+                        <h3>${library.name}</h3>
+                        ${library.library_system ? `<span class="library-system">${library.library_system}</span>` : ''}
+                    </div>
                     <p><strong>${library.city}, ${library.county}</strong></p>
                     ${library.address ? `<p>${library.address}</p>` : ''}
+                    <div class="library-stats">
+                        <span class="stat">📸 ${library.image_count || 0} images</span>
+                        <span class="stat">👥 ${library.visit_count || 0} visits</span>
+                    </div>
                 </div>
-                <div class="library-stats">
-                    <span class="stat">📸 ${library.image_count || 0} images</span>
-                    <span class="stat">👥 ${library.visit_count || 0} visits</span>
+                <div class="library-actions">
+                    <button class="btn btn-primary" onclick="event.stopPropagation(); libraryManager.openLibraryDetail(${library.id})">
+                        📖 Details
+                    </button>
+                    <button class="btn btn-secondary" onclick="event.stopPropagation(); libraryManager.addVisit(${library.id})">
+                        ✅ Record Visit
+                    </button>
                 </div>
             </div>
         `).join('');
@@ -579,6 +587,11 @@ const libraryManager = {
                 ${visit.notes ? `<p class="visit-notes">${visit.notes}</p>` : ''}
             </div>
         `).join('');
+    },
+    
+    addVisit(libraryId) {
+        currentLibraryId = libraryId;
+        modalManager.open(elements.addVisitModal);
     },
     
     updateStats() {
@@ -913,8 +926,30 @@ function initEventListeners() {
         });
     });
     
-    // Initialize tabs
-    tabManager.init();
+    // Initialize view buttons (Grid/List)
+function initViewButtons() {
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const librariesGrid = document.getElementById('librariesGrid');
+    
+    viewButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons
+            viewButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            const view = button.getAttribute('data-view');
+            if (view === 'grid') {
+                librariesGrid.className = 'libraries-grid';
+            } else if (view === 'list') {
+                librariesGrid.className = 'libraries-list';
+            }
+        });
+    });
+}
+
+// Initialize tabs
+tabManager.init();
 }
 
     // Initialize app

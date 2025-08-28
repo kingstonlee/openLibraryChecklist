@@ -224,6 +224,39 @@ body {
     gap: 2rem;
 }
 
+.libraries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.libraries-list .library-system-group {
+    margin-bottom: 1rem;
+}
+
+.libraries-list .branches-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.libraries-list .library-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    gap: 1.5rem;
+}
+
+.libraries-list .library-card .library-info {
+    flex: 1;
+}
+
+.libraries-list .library-card .library-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
 .library-system-group {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -309,6 +342,17 @@ body {
     display: flex;
     gap: 1rem;
     margin-bottom: 1rem;
+}
+
+.library-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.library-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
 }
 
 .stat-item {
