@@ -422,6 +422,31 @@ const userManager = {
             elements.userProfileBtn.style.display = 'none';
             elements.logoutBtn.style.display = 'none';
         }
+    },
+    
+    // Get anonymous user ID for tracking without account
+    getAnonymousUserId() {
+        let anonymousId = localStorage.getItem('anonymousUserId');
+        if (!anonymousId) {
+            anonymousId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('anonymousUserId', anonymousId);
+        }
+        return anonymousId;
+    },
+    
+    // Get current user ID (logged in or anonymous)
+    getCurrentUserId() {
+        return currentUser ? currentUser.id : this.getAnonymousUserId();
+    },
+    
+    // Get current username (logged in or anonymous)
+    getCurrentUsername() {
+        return currentUser ? currentUser.username : 'Anonymous User';
+    },
+    
+    // Check if user is logged in
+    isLoggedIn() {
+        return !!currentUser;
     }
 };
 
@@ -617,10 +642,12 @@ const formHandlers = {
             
             const imageData = {
                 library_id: currentLibraryId,
-                user_id: currentUser?.id || null,
+                user_id: userManager.getCurrentUserId(),
+                username: userManager.getCurrentUsername(),
                 caption: caption,
                 data_url: dataUrl,
-                filename: file.name
+                filename: file.name,
+                created_at: new Date().toISOString()
             };
             
             await storage.addImage(imageData);
@@ -650,10 +677,12 @@ const formHandlers = {
         const formData = new FormData(event.target);
         const visitData = {
             library_id: currentLibraryId,
-            user_id: currentUser?.id || null,
-            visitor_name: formData.get('visitor_name'),
+            user_id: userManager.getCurrentUserId(),
+            username: userManager.getCurrentUsername(),
+            visitor_name: formData.get('visitor_name') || userManager.getCurrentUsername(),
             notes: formData.get('notes'),
-            rating: formData.get('rating') ? parseInt(formData.get('rating')) : null
+            rating: formData.get('rating') ? parseInt(formData.get('rating')) : null,
+            created_at: new Date().toISOString()
         };
         
         try {
@@ -888,32 +917,50 @@ function initEventListeners() {
     tabManager.init();
 }
 
-// Initialize app
-async function initApp() {
-    try {
-        // Initialize storage
-        await storage.initDB();
-        
-        // Load preset libraries if database is empty
-        await loadPresetLibraries();
-        
-        // Initialize user management first
-        userManager.init();
-        
-        // Load libraries
-        await libraryManager.loadLibraries();
-        
-        // Initialize search and filters
-        searchManager.init();
-        await searchManager.loadFilters();
-        
-        // Initialize event listeners
-        initEventListeners();
-        
-        console.log('Static Library Tracker initialized successfully!');
-    } catch (error) {
-        console.error('Error initializing app:', error);
-        utils.showNotification('Error initializing app', 'error');
+    // Initialize app
+    async function initApp() {
+        try {
+            // Initialize storage
+            await storage.initDB();
+            
+            // Load preset libraries if database is empty
+            await loadPresetLibraries();
+            
+            // Initialize user management (optional)
+            userManager.init();
+            
+            // Load libraries
+            await libraryManager.loadLibraries();
+            
+            // Initialize search and filters
+            searchManager.init();
+            await searchManager.loadFilters();
+            
+            // Initialize event listeners
+            initEventListeners();
+            
+            // Show welcome message for new users
+            showWelcomeMessage();
+            
+            console.log('Static Library Tracker initialized successfully!');
+        } catch (error) {
+            console.error('Error initializing app:', error);
+            utils.showNotification('Error initializing app', 'error');
+        }
+    }
+
+// Show welcome message for new users
+function showWelcomeMessage() {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    if (!hasSeenWelcome) {
+        setTimeout(() => {
+            utils.showNotification(
+                'Welcome to California Library Tracker! 📚 You can start tracking libraries immediately. Create an account to sync data across devices.',
+                'info',
+                8000
+            );
+            localStorage.setItem('hasSeenWelcome', 'true');
+        }, 2000);
     }
 }
 
