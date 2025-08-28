@@ -240,7 +240,7 @@ const storage = {
     async addVisit(visitData) {
         return await this.add('visits', {
             ...visitData,
-            visit_date: new Date().toISOString()
+            created_at: new Date().toISOString()
         });
     },
     
@@ -564,7 +564,9 @@ const libraryManager = {
     
     async loadLibraryVisits(libraryId) {
         try {
+            console.log('Loading visits for library:', libraryId);
             const visits = await storage.getVisits(libraryId);
+            console.log('Found visits:', visits);
             this.renderVisits(visits);
         } catch (error) {
             console.error('Error loading visits:', error);
@@ -572,6 +574,7 @@ const libraryManager = {
     },
     
     renderVisits(visits) {
+        console.log('Rendering visits:', visits);
         if (visits.length === 0) {
             elements.visitsList.innerHTML = '<p>No visits recorded yet.</p>';
             return;
@@ -580,10 +583,10 @@ const libraryManager = {
         elements.visitsList.innerHTML = visits.map(visit => `
             <div class="visit-item">
                 <div class="visit-header">
-                    <strong>${visit.visitor_name}</strong>
-                    <span class="visit-date">${utils.formatDate(visit.visit_date)}</span>
+                    <strong>${visit.visitor_name || 'Anonymous'}</strong>
+                    <span class="visit-date">${utils.formatDate(visit.created_at)}</span>
                 </div>
-                ${visit.rating ? `<div class="visit-rating">⭐ ${visit.rating}/5</div>` : ''}
+                ${visit.rating ? `<div class="visit-rating">${'⭐'.repeat(visit.rating)}</div>` : ''}
                 ${visit.notes ? `<p class="visit-notes">${visit.notes}</p>` : ''}
             </div>
         `).join('');
@@ -699,7 +702,9 @@ const formHandlers = {
         };
         
         try {
+            console.log('Saving visit data:', visitData);
             await storage.addVisit(visitData);
+            console.log('Visit saved successfully');
             modalManager.close(elements.addVisitModal);
             event.target.reset();
             await libraryManager.loadLibraryVisits(currentLibraryId);
@@ -1168,6 +1173,19 @@ if (typeof window !== 'undefined') {
             console.log('Force load complete!');
         } catch (error) {
             console.error('Error force loading:', error);
+        }
+    };
+    
+    // Test function for visits
+    window.testVisitFunctionality = async () => {
+        console.log('Testing visit functionality...');
+        const libraries = await storage.getAll('libraries');
+        if (libraries.length > 0) {
+            const firstLibrary = libraries[0];
+            console.log('Testing with library:', firstLibrary);
+            await libraryManager.openLibraryDetail(firstLibrary.id);
+        } else {
+            console.log('No libraries found for testing');
         }
     };
 }
