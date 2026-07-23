@@ -168,6 +168,26 @@ test('POST /api/auth/register rejects a weak password with 400', async () => {
   assert.strictEqual(res.status, 400);
 });
 
+test('image upload with no file returns 400', async () => {
+  setDatabaseForTest(fakeDb({}));
+  const form = new FormData();
+  form.append('user_id', '1');
+  const res = await fetch(`${baseUrl}/api/libraries/1/images`, { method: 'POST', body: form });
+  assert.strictEqual(res.status, 400);
+});
+
+test('image upload is parsed by multer and returns 503 when sharp is unavailable', async () => {
+  // Confirms the multer middleware parses a multipart upload end-to-end. In
+  // the test environment the optional `sharp` module is not installed, so the
+  // handler cleans up and responds 503 rather than processing the image.
+  setDatabaseForTest(fakeDb({}));
+  const form = new FormData();
+  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  form.append('image', new Blob([pngBytes], { type: 'image/png' }), 'test.png');
+  const res = await fetch(`${baseUrl}/api/libraries/1/images`, { method: 'POST', body: form });
+  assert.strictEqual(res.status, 503);
+});
+
 test('unknown routes return a 404 JSON error', async () => {
   setDatabaseForTest(fakeDb({}));
   const res = await fetch(`${baseUrl}/api/does-not-exist`);
