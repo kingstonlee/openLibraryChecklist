@@ -21,7 +21,7 @@ const NODE_GLOBALS = {
   setInterval: 'readonly',
   clearInterval: 'readonly',
   URL: 'readonly',
-  process_env: 'readonly'
+  fetch: 'readonly'
 };
 
 const BROWSER_GLOBALS = {
