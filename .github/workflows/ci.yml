@@ -28,6 +28,7 @@ jobs:
           node --check server.js
           node --check lib/password.js
           node --check lib/auth.js
+          node --check lib/token.js
 
       - name: Run unit tests
         run: npm test

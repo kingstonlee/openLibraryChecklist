@@ -9,11 +9,30 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { hashPassword, verifyPassword } = require('./lib/password');
 const { getAdminRole, requireAdmin: makeRequireAdmin, canManageAdmins, createRateLimiter } = require('./lib/auth');
+const { signToken, verifyToken } = require('./lib/token');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Secret used to sign session tokens. Prefer a stable value from the
+// environment so tokens survive restarts; fall back to an ephemeral random
+// secret (with a warning) for zero-config local development.
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.SESSION_SECRET) {
+  console.warn('SESSION_SECRET is not set; using an ephemeral secret. Sessions will not survive a restart. Set SESSION_SECRET in production.');
+}
+
+// Resolve the acting user id from a verified Bearer session token.
+function getActingUserId(req) {
+  const header = req.get('authorization') || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  const payload = verifyToken(match[1], SESSION_SECRET);
+  return payload ? payload.userId : null;
+}
 
 // Middleware
 app.use(helmet({
@@ -28,7 +47,31 @@ app.use(helmet({
   }
 }));
 app.use(compression());
-app.use(cors());
+
+// Restrict CORS to an explicit allowlist when configured. Set CORS_ORIGINS to a
+// comma-separated list of allowed origins (e.g. "https://example.com,https://www.example.com").
+// If unset, same-origin requests still work; cross-origin requests are simply
+// not granted CORS access rather than being open to every origin.
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Non-browser or same-origin requests have no Origin header — allow them.
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  }
+}));
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -180,8 +223,8 @@ const upload = multer({
 });
 
 // Authorization: middleware guarding admin-only routes (see lib/auth.js).
-// Bound to this app's database handle once here.
-const requireAdmin = makeRequireAdmin(db);
+// The acting user is resolved from the verified session token.
+const requireAdmin = makeRequireAdmin(db, getActingUserId);
 
 // Routes
 
@@ -445,7 +488,7 @@ app.post('/api/users/:id/toggle-admin', async (req, res) => {
   // Authorize the caller.
   let callerIsAdmin = false;
   try {
-    callerIsAdmin = !!(await getAdminRole(db, req.get('x-user-id')));
+    callerIsAdmin = !!(await getAdminRole(db, getActingUserId(req)));
   } catch (err) {
     res.status(500).json({ error: err.message });
     return;
@@ -747,7 +790,11 @@ app.post('/api/auth/login', authLimiter, (req, res) => {
     // Update last login
     db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
 
+    // Issue a signed session token the client sends back as a Bearer token.
+    const token = signToken({ userId: user.id, username: user.username }, SESSION_SECRET);
+
     res.json({
+      token,
       user: {
         id: user.id,
         username: user.username,

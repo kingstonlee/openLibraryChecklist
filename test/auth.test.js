@@ -76,8 +76,12 @@ test('getAdminRole rejects when the query errors', async () => {
 
 // --- requireAdmin ----------------------------------------------------------
 
-test('requireAdmin returns 401 when no x-user-id header is present', async () => {
-  const mw = requireAdmin(fakeDb());
+// The middleware resolves the acting user via an injected extractor; here we
+// read a plain property off the fake request.
+const actingIdFrom = (req) => req.actingId || null;
+
+test('requireAdmin returns 401 when no acting user is resolved', async () => {
+  const mw = requireAdmin(fakeDb(), actingIdFrom);
   const res = fakeRes();
   let nextCalled = false;
   await mw(fakeReq({}), res, () => { nextCalled = true; });
@@ -86,18 +90,18 @@ test('requireAdmin returns 401 when no x-user-id header is present', async () =>
 });
 
 test('requireAdmin returns 403 for a non-admin user', async () => {
-  const mw = requireAdmin(fakeDb({ admins: { 1: 'admin' } }));
+  const mw = requireAdmin(fakeDb({ admins: { 1: 'admin' } }), actingIdFrom);
   const res = fakeRes();
   let nextCalled = false;
-  await mw(fakeReq({ 'x-user-id': '2' }), res, () => { nextCalled = true; });
+  await mw(fakeReq({}, { actingId: '2' }), res, () => { nextCalled = true; });
   assert.strictEqual(res.statusCode, 403);
   assert.strictEqual(nextCalled, false);
 });
 
 test('requireAdmin calls next and sets acting fields for an admin', async () => {
-  const mw = requireAdmin(fakeDb({ admins: { 5: 'moderator' } }));
+  const mw = requireAdmin(fakeDb({ admins: { 5: 'moderator' } }), actingIdFrom);
   const res = fakeRes();
-  const req = fakeReq({ 'x-user-id': '5' });
+  const req = fakeReq({}, { actingId: '5' });
   let nextCalled = false;
   await mw(req, res, () => { nextCalled = true; });
   assert.strictEqual(nextCalled, true);
@@ -107,9 +111,9 @@ test('requireAdmin calls next and sets acting fields for an admin', async () => 
 });
 
 test('requireAdmin returns 500 when the lookup errors', async () => {
-  const mw = requireAdmin(fakeDb({ err: new Error('boom') }));
+  const mw = requireAdmin(fakeDb({ err: new Error('boom') }), actingIdFrom);
   const res = fakeRes();
-  await mw(fakeReq({ 'x-user-id': '1' }), res, () => {});
+  await mw(fakeReq({}, { actingId: '1' }), res, () => {});
   assert.strictEqual(res.statusCode, 500);
 });
 

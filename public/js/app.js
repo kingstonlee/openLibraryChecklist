@@ -1,6 +1,7 @@
 // Global variables
 let currentLibraryId = null;
 let currentUser = null;
+let authToken = localStorage.getItem('libraryTrackerToken') || null;
 let libraries = [];
 let librarySystems = [];
 let counties = [];
@@ -295,9 +296,11 @@ const api = {
     }
 };
 
-// Identify the acting user to the server for admin-only endpoints.
+// Send the signed session token so the server can identify the acting user
+// for admin-only endpoints. Unlike the previous x-user-id header, this token
+// is signed server-side and cannot be forged to impersonate another user.
 function authHeaders() {
-    return currentUser && currentUser.id ? { 'x-user-id': String(currentUser.id) } : {};
+    return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 }
 
 // Utility functions
@@ -407,6 +410,8 @@ const userManager = {
             localStorage.setItem('libraryTrackerUser', JSON.stringify(currentUser));
         } else {
             localStorage.removeItem('libraryTrackerUser');
+            authToken = null;
+            localStorage.removeItem('libraryTrackerToken');
         }
     },
     
@@ -429,6 +434,10 @@ const userManager = {
             const result = await api.login(credentials);
             if (result.user) {
                 currentUser = result.user;
+                authToken = result.token || null;
+                if (authToken) {
+                    localStorage.setItem('libraryTrackerToken', authToken);
+                }
                 this.saveUserToStorage();
                 this.updateUI();
                 modalManager.close(elements.loginModal);
