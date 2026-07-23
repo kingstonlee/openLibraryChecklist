@@ -3,7 +3,7 @@
 
 // Version tracking for library updates
 const LIBRARY_VERSION_KEY = 'libraryTrackerVersion';
-const CURRENT_LIBRARY_VERSION = '1.5.0';
+const CURRENT_LIBRARY_VERSION = '1.6.0';
 
 // Library update batches - each batch can be applied independently
 const LIBRARY_UPDATES = {
@@ -1626,6 +1626,14 @@ const LIBRARY_UPDATES = {
                 visit_count: 0
             }
         ]
+    },
+    '1.6.0': {
+        name: 'Full California library catalog',
+        description: 'Ensures every install has the complete, single-sourced library set from data/libraries.json (shared with the server build).',
+        // Reference the canonical dataset loaded by data.js (generated from
+        // data/libraries.json) instead of duplicating it here. Existing users
+        // only receive libraries they don't already have (see libraryExists).
+        libraries: (typeof CALIFORNIA_LIBRARIES !== 'undefined' ? CALIFORNIA_LIBRARIES : [])
     }
 };
 
