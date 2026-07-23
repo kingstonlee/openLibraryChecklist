@@ -103,7 +103,15 @@ Unit tests run on Node's built-in test runner (no extra dependencies):
 npm test
 ```
 
-CI runs the test suite and syntax checks on Node 18, 20, and 22 for every push and pull request (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+Lint and format (ESLint / Prettier, fetched on demand via `npx`):
+
+```bash
+npm run lint          # report problems
+npm run format        # auto-format
+npm run format:check  # check formatting without writing
+```
+
+CI runs the test suite and syntax checks on Node 18, 20, and 22, plus an ESLint job, for every push and pull request (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## 📁 Project Structure
 
