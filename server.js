@@ -10,6 +10,7 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const { hashPassword, verifyPassword } = require('./lib/password');
+const { getAdminRole, requireAdmin: makeRequireAdmin, canManageAdmins, createRateLimiter } = require('./lib/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,33 +31,6 @@ app.use(compression());
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-// Simple in-memory rate limiter (no external dependency). Limits requests per
-// client IP within a rolling time window. Suitable for a single-process app;
-// swap for a shared store if you run multiple instances.
-function createRateLimiter({ windowMs, max, message }) {
-  const hits = new Map();
-  return (req, res, next) => {
-    const now = Date.now();
-    const key = req.ip || req.connection?.remoteAddress || 'unknown';
-    const timestamps = (hits.get(key) || []).filter((t) => now - t < windowMs);
-    timestamps.push(now);
-    hits.set(key, timestamps);
-
-    // Opportunistic cleanup so the map doesn't grow unbounded.
-    if (hits.size > 5000) {
-      for (const [k, ts] of hits) {
-        if (ts.every((t) => now - t >= windowMs)) hits.delete(k);
-      }
-    }
-
-    if (timestamps.length > max) {
-      res.status(429).json({ error: message || 'Too many requests, please try again later.' });
-      return;
-    }
-    next();
-  };
-}
 
 // Cap authentication attempts to slow down brute-force / credential stuffing.
 const authLimiter = createRateLimiter({
@@ -205,49 +179,9 @@ const upload = multer({
   }
 });
 
-// Authorization helpers
-
-// Look up whether a user id has an admin_users row. Resolves with the role
-// string (e.g. 'admin' / 'moderator') or null.
-function getAdminRole(userId) {
-  return new Promise((resolve, reject) => {
-    if (!userId) {
-      resolve(null);
-      return;
-    }
-    db.get('SELECT role FROM admin_users WHERE user_id = ?', [userId], (err, admin) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(admin ? admin.role : null);
-    });
-  });
-}
-
-// Middleware guarding admin-only routes. The acting user is identified by the
-// `x-user-id` header and must have an admin_users row. This is intentionally
-// lightweight (there is no session/token layer in this app) but it closes the
-// hole where admin endpoints were completely unauthenticated.
-async function requireAdmin(req, res, next) {
-  const actingUserId = req.get('x-user-id');
-  if (!actingUserId) {
-    res.status(401).json({ error: 'Authentication required' });
-    return;
-  }
-  try {
-    const role = await getAdminRole(actingUserId);
-    if (!role) {
-      res.status(403).json({ error: 'Admin access required' });
-      return;
-    }
-    req.actingUserId = actingUserId;
-    req.actingRole = role;
-    next();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+// Authorization: middleware guarding admin-only routes (see lib/auth.js).
+// Bound to this app's database handle once here.
+const requireAdmin = makeRequireAdmin(db);
 
 // Routes
 
@@ -511,17 +445,17 @@ app.post('/api/users/:id/toggle-admin', async (req, res) => {
   // Authorize the caller.
   let callerIsAdmin = false;
   try {
-    callerIsAdmin = !!(await getAdminRole(req.get('x-user-id')));
+    callerIsAdmin = !!(await getAdminRole(db, req.get('x-user-id')));
   } catch (err) {
     res.status(500).json({ error: err.message });
     return;
   }
 
-  const setupToken = process.env.ADMIN_SETUP_TOKEN;
-  const providedToken = req.get('x-admin-setup-token');
-  const hasValidSetupToken = !!setupToken && providedToken === setupToken;
-
-  if (!callerIsAdmin && !hasValidSetupToken) {
+  if (!canManageAdmins({
+    callerIsAdmin,
+    configuredToken: process.env.ADMIN_SETUP_TOKEN,
+    providedToken: req.get('x-admin-setup-token')
+  })) {
     res.status(403).json({
       error: 'Granting or revoking admin requires an existing admin or a valid setup token'
     });
