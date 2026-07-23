@@ -91,9 +91,9 @@ static-version/
 - **Data URLs**: Images are converted to base64 strings for storage
 
 ### Authentication
-- **Client-side**: All authentication handled in the browser
-- **Password Hashing**: Simple hash function for password security
-- **Session Management**: Automatic login persistence
+- **Client-side**: All authentication is handled in the browser and is optional — the app works without an account
+- **Password Handling**: Accounts are a local convenience only. Passwords are passed through a simple non-cryptographic hash before being stored in the browser; because all data lives on the same device, this is obfuscation, not real security. Do not reuse an important password here.
+- **Session Management**: Automatic login persistence via localStorage
 
 ### Image Handling
 - **File API**: Reads image files from user's device
@@ -206,9 +206,9 @@ const exportData = {
 - **User Control**: Complete control over your data
 
 ### Security Features
-- **Password Hashing**: Passwords are hashed before storage
-- **Input Validation**: All user inputs are validated
-- **XSS Protection**: Content is properly escaped
+- **XSS Protection**: User-supplied text (library names, notes, captions) is HTML-escaped before rendering, and website links are restricted to `http`/`https` schemes
+- **Local-only data**: Nothing is sent to a server, so there is no network attack surface
+- **Note**: The client-side password hash is obfuscation only (see Authentication above), not a real security control
 
 ## 🎯 Use Cases
 

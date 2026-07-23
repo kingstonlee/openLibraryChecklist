@@ -27,6 +27,7 @@ jobs:
         run: |
           node --check server.js
           node --check lib/password.js
+          node --check lib/auth.js
 
       - name: Run unit tests
         run: npm test

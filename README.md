@@ -5,6 +5,11 @@ A web application for tracking and exploring California public libraries. It shi
 - **Server version** (`server.js`, `public/`) — a Node.js + Express + SQLite app with user accounts, image uploads, and an admin verification workflow.
 - **Static version** (`static-version/`) — a zero-backend build that runs entirely in the browser using IndexedDB, ideal for GitHub Pages / Netlify hosting. No account required.
 
+### Which version should I use?
+
+- **Just want to track libraries, or host for free?** Use the **static version**. It needs no server, no database, and no accounts — open it and go. This is the recommended path for most people and is what recent development targets.
+- **Need shared, multi-user data with a central database, uploads, and admin moderation?** Use the **server version**.
+
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green) ![Express](https://img.shields.io/badge/Express-4.x-blue) ![SQLite](https://img.shields.io/badge/SQLite-3.x-orange) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## ✨ Features
@@ -152,6 +157,9 @@ openLibraryChecklist/
 ## 🔒 Security Notes
 
 - Passwords in the server version are hashed with salted **scrypt** (Node's built-in `crypto`); plaintext passwords are never stored.
+- Admin endpoints (`/api/admin/*`, `toggle-admin`) require the acting user to be an admin (sent via the `x-user-id` header); granting admin additionally requires an existing admin or a configured `ADMIN_SETUP_TOKEN`. Bootstrap the first admin with `scripts/setup-admin.js`.
+- Authentication endpoints are rate-limited to slow down brute-force attempts.
+- User-supplied content is HTML-escaped in the front-end before rendering to prevent stored XSS.
 - `helmet` sets a Content Security Policy and other protective headers.
 - The static version stores all data locally in the browser and sends nothing to a server.
 

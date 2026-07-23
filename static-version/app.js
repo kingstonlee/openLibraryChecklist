@@ -270,6 +270,28 @@ const storage = {
 
 // Utility functions
 const utils = {
+    // Escape user-supplied text before inserting it into innerHTML to prevent XSS.
+    escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    },
+
+    // Return a URL only if it uses a safe scheme, otherwise an empty string.
+    // Blocks javascript:, data:, and other script-capable schemes.
+    safeUrl(value) {
+        if (!value) return '';
+        const trimmed = String(value).trim();
+        if (/^https?:\/\//i.test(trimmed) || /^\//.test(trimmed)) {
+            return trimmed;
+        }
+        return '';
+    },
+
     showLoading() {
         elements.loadingIndicator.style.display = 'flex';
     },
@@ -476,11 +498,11 @@ const libraryManager = {
             <div class="library-card">
                 <div class="library-info">
                     <div class="library-header">
-                        <h3>${library.name}</h3>
-                        ${library.library_system ? `<span class="library-system">${library.library_system}</span>` : ''}
+                        <h3>${utils.escapeHtml(library.name)}</h3>
+                        ${library.library_system ? `<span class="library-system">${utils.escapeHtml(library.library_system)}</span>` : ''}
                     </div>
-                    <p><strong>${library.city}, ${library.county}</strong></p>
-                    ${library.address ? `<p>${library.address}</p>` : ''}
+                    <p><strong>${utils.escapeHtml(library.city)}, ${utils.escapeHtml(library.county)}</strong></p>
+                    ${library.address ? `<p>${utils.escapeHtml(library.address)}</p>` : ''}
                     <div class="library-stats">
                         <span class="stat">📸 ${library.image_count || 0} images</span>
                         <span class="stat">👥 ${library.visit_count || 0} visits</span>
@@ -527,8 +549,9 @@ const libraryManager = {
         elements.detailPhone.textContent = library.phone || 'N/A';
         
         const websiteLink = elements.detailWebsite;
-        if (library.website) {
-            websiteLink.href = library.website;
+        const safeWebsite = utils.safeUrl(library.website);
+        if (safeWebsite) {
+            websiteLink.href = safeWebsite;
             websiteLink.textContent = library.website;
             websiteLink.style.display = 'inline';
         } else {
@@ -553,10 +576,10 @@ const libraryManager = {
         
         elements.imagesGrid.innerHTML = images.map(image => `
             <div class="image-card">
-                <img src="${image.data_url}" alt="${image.caption || 'Library image'}" loading="lazy">
+                <img src="${utils.escapeHtml(image.data_url)}" alt="${utils.escapeHtml(image.caption || 'Library image')}" loading="lazy">
                 <div class="image-info">
-                    <p>${image.caption || 'No caption'}</p>
-                    <small>Uploaded: ${utils.formatDate(image.created_at)}</small>
+                    <p>${utils.escapeHtml(image.caption || 'No caption')}</p>
+                    <small>Uploaded: ${utils.escapeHtml(utils.formatDate(image.created_at))}</small>
                 </div>
             </div>
         `).join('');
@@ -583,11 +606,11 @@ const libraryManager = {
         elements.visitsList.innerHTML = visits.map(visit => `
             <div class="visit-item">
                 <div class="visit-header">
-                    <strong>${visit.visitor_name || 'Anonymous'}</strong>
-                    <span class="visit-date">${utils.formatDate(visit.created_at)}</span>
+                    <strong>${utils.escapeHtml(visit.visitor_name || 'Anonymous')}</strong>
+                    <span class="visit-date">${utils.escapeHtml(utils.formatDate(visit.created_at))}</span>
                 </div>
-                ${visit.rating ? `<div class="visit-rating">${'⭐'.repeat(visit.rating)}</div>` : ''}
-                ${visit.notes ? `<p class="visit-notes">${visit.notes}</p>` : ''}
+                ${visit.rating ? `<div class="visit-rating">${'⭐'.repeat(Math.max(0, Math.min(5, parseInt(visit.rating, 10) || 0)))}</div>` : ''}
+                ${visit.notes ? `<p class="visit-notes">${utils.escapeHtml(visit.notes)}</p>` : ''}
             </div>
         `).join('');
     },
@@ -778,11 +801,11 @@ const searchManager = {
         
         // Populate county filter
         elements.countyFilter.innerHTML = '<option value="">All Counties</option>' +
-            uniqueCounties.map(county => `<option value="${county}">${county}</option>`).join('');
-        
+            uniqueCounties.map(county => `<option value="${utils.escapeHtml(county)}">${utils.escapeHtml(county)}</option>`).join('');
+
         // Populate library system filter
         elements.librarySystemFilter.innerHTML = '<option value="">All Library Systems</option>' +
-            uniqueSystems.map(system => `<option value="${system}">${system}</option>`).join('');
+            uniqueSystems.map(system => `<option value="${utils.escapeHtml(system)}">${utils.escapeHtml(system)}</option>`).join('');
     }
 };
 
@@ -1050,7 +1073,7 @@ function updateSyncStatus() {
         syncStatusElement.innerHTML = `
             <div class="status-item">
                 <span class="status-label">User ID:</span>
-                <span class="status-value">${status.userId}</span>
+                <span class="status-value">${utils.escapeHtml(status.userId)}</span>
             </div>
             <div class="status-item">
                 <span class="status-label">Last Sync:</span>
