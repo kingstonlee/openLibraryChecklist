@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const multer = require('multer');
 const sharp = require('sharp');
@@ -7,6 +9,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
+const { hashPassword, verifyPassword } = require('./lib/password');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -632,17 +635,27 @@ app.get('/api/counties', (req, res) => {
 // User Authentication Routes
 
 // Register new user
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { username, email, password, display_name } = req.body;
-  
-  // Simple password hashing (in production, use bcrypt)
-  const password_hash = Buffer.from(password).toString('base64');
-  
+
+  if (!username || !password) {
+    res.status(400).json({ error: 'Username and password are required' });
+    return;
+  }
+
+  let password_hash;
+  try {
+    password_hash = await hashPassword(password);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+    return;
+  }
+
   const query = `
     INSERT INTO users (username, email, password_hash, display_name)
     VALUES (?, ?, ?, ?)
   `;
-  
+
   db.run(query, [username, email, password_hash, display_name], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE constraint failed')) {
@@ -659,23 +672,38 @@ app.post('/api/auth/register', (req, res) => {
 // Login user
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
-  const password_hash = Buffer.from(password).toString('base64');
-  
-  db.get('SELECT * FROM users WHERE username = ? AND password_hash = ?', 
-    [username, password_hash], (err, user) => {
+
+  if (!username || !password) {
+    res.status(400).json({ error: 'Username and password are required' });
+    return;
+  }
+
+  db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
     }
-    if (!user) {
+
+    let passwordValid = false;
+    if (user) {
+      try {
+        passwordValid = await verifyPassword(password, user.password_hash);
+      } catch (verifyErr) {
+        res.status(500).json({ error: verifyErr.message });
+        return;
+      }
+    }
+
+    if (!user || !passwordValid) {
+      // Same response whether the user exists or not, to avoid leaking accounts.
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
-    
+
     // Update last login
     db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
-    
-    res.json({ 
+
+    res.json({
       user: {
         id: user.id,
         username: user.username,
@@ -686,7 +714,7 @@ app.post('/api/auth/login', (req, res) => {
         total_visits: user.total_visits,
         total_images: user.total_images
       },
-      message: 'Login successful' 
+      message: 'Login successful'
     });
   });
 });

@@ -1,204 +1,187 @@
 # 📚 California Library Tracker
 
-A comprehensive web application for tracking and exploring California public libraries. Built with Node.js, Express, SQLite, and modern web technologies.
+A web application for tracking and exploring California public libraries. It ships in **two flavours** so you can pick whichever fits your needs:
 
-![Library Tracker](https://img.shields.io/badge/Node.js-16+-green) ![Express](https://img.shields.io/badge/Express-4.x-blue) ![SQLite](https://img.shields.io/badge/SQLite-3.x-orange) ![License](https://img.shields.io/badge/License-MIT-yellow)
+- **Server version** (`server.js`, `public/`) — a Node.js + Express + SQLite app with user accounts, image uploads, and an admin verification workflow.
+- **Static version** (`static-version/`) — a zero-backend build that runs entirely in the browser using IndexedDB, ideal for GitHub Pages / Netlify hosting. No account required.
+
+![Node.js](https://img.shields.io/badge/Node.js-18+-green) ![Express](https://img.shields.io/badge/Express-4.x-blue) ![SQLite](https://img.shields.io/badge/SQLite-3.x-orange) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## ✨ Features
 
-### 🏛️ **Library Management**
-- **94 California Libraries**: Comprehensive database of public libraries across California
-- **Library Systems & Branches**: Organized by library systems with multiple branch locations
-- **Search & Filter**: Find libraries by name, county, or library system
-- **Interactive Map**: Visual library locations with details
+### 🏛️ Library Management
+- Curated database of California public libraries (94 in the server build, 29 preset in the static build)
+- Organized by library system and branch
+- Search and filter by name, county, or library system
 
-### 👥 **User System**
-- **User Registration & Login**: Secure authentication system
-- **Personal Profiles**: Track your library visits and contributions
-- **Visit History**: Record and rate your library visits
-- **Library Goals**: Create personal checklists of libraries to visit
+### 👥 User System *(server version)*
+- Registration and login with salted password hashing
+- Personal profiles tracking visits and contributions
+- Visit history with notes and 1–5 ratings
+- Personal library goals / checklists
 
-### 📸 **Image Crowdsourcing**
-- **Photo Uploads**: Users can upload photos of libraries
-- **Image Management**: Automatic resizing and optimization
-- **Gallery View**: Browse library photos contributed by the community
+### 📸 Image Crowdsourcing
+- Photo uploads for each library
+- Automatic resizing and optimization (server version uses Sharp)
+- Community gallery view
 
-### 🔐 **Admin Verification System**
-- **Library Submissions**: Users can submit new libraries for verification
-- **Admin Review**: Admin users can approve/reject submissions
-- **Quality Control**: Ensures data accuracy and prevents spam
-- **Admin Toggle**: Easy enable/disable of admin privileges
+### 🔐 Admin Verification *(server version)*
+- User-submitted libraries land in a pending queue
+- Admins approve or reject submissions with notes
+- Toggleable admin privileges
 
-### 📊 **Statistics & Analytics**
-- **Visit Tracking**: Monitor library visit statistics
-- **User Activity**: Track user contributions and engagement
-- **County Exploration**: See which counties you've explored
-- **Progress Metrics**: Visual progress indicators
+### 📊 Statistics
+- Visit tracking and per-user activity
+- County exploration progress
+- Visual progress indicators
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Node.js, Express.js
-- **Database**: SQLite3
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **Image Processing**: Sharp, Multer
-- **Security**: Helmet.js, Compression
-- **Hosting**: Dreamhost Apps compatible
+| | Server version | Static version |
+| --- | --- | --- |
+| Backend | Node.js, Express | None (browser only) |
+| Storage | SQLite3 | IndexedDB + localStorage |
+| Frontend | Vanilla JS, HTML5, CSS3 | Vanilla JS, HTML5, CSS3 |
+| Images | Sharp + Multer | File API / data URLs |
+| Security | Helmet, Compression, scrypt | Client-side only |
 
-## 🚀 Quick Start
+## 🚀 Quick Start (server version)
 
 ### Prerequisites
-- Node.js 16+ 
-- npm or yarn
+- Node.js 18+
+- npm
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/california-library-tracker.git
-   cd california-library-tracker
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   ```
-   http://localhost:3000
-   ```
-
-### Database Setup
-
-The database will be automatically created on first run. To populate with initial library data:
-
 ```bash
-# Start the server first (to create database)
-node server.js &
-# Then populate libraries
-node scripts/populate-libraries.js
+git clone https://github.com/kingstonlee/openLibraryChecklist.git
+cd openLibraryChecklist
+npm install
+cp .env.example .env   # optional: adjust PORT / NODE_ENV
+npm run dev            # or: npm start
 ```
 
-### Admin Setup
+Then open http://localhost:3000.
 
-Create admin users for the verification system:
+### Database setup
+
+The SQLite database is created automatically on first run. To seed it with the preset library data:
 
 ```bash
-# Make a user an admin
-node scripts/setup-admin.js add <username> admin
-
-# List all admin users
-node scripts/setup-admin.js list
+node server.js &                    # start the server (creates the DB)
+node scripts/populate-libraries.js  # populate libraries
 ```
+
+### Admin setup
+
+```bash
+node scripts/setup-admin.js add <username> admin   # grant admin
+node scripts/setup-admin.js list                   # list admins
+```
+
+## 🌐 Quick Start (static version)
+
+No build step or server required:
+
+```bash
+cd static-version
+python -m http.server 8000   # or: npx http-server
+```
+
+Open http://localhost:8000. See [`static-version/README.md`](static-version/README.md) for hosting on GitHub Pages, Netlify, or Vercel.
+
+## 🧪 Tests
+
+Unit tests run on Node's built-in test runner (no extra dependencies):
+
+```bash
+npm test
+```
+
+CI runs the test suite and syntax checks on Node 18, 20, and 22 for every push and pull request (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## 📁 Project Structure
 
 ```
-california-library-tracker/
-├── server.js                 # Main Express server
-├── package.json             # Dependencies and scripts
-├── library.db               # SQLite database
-├── public/                  # Static files
-│   ├── index.html          # Main application page
-│   ├── css/style.css       # Stylesheets
-│   ├── js/app.js           # Frontend JavaScript
-│   └── uploads/            # User uploaded images
-├── scripts/                # Utility scripts
-│   ├── populate-libraries.js  # Database population
-│   └── setup-admin.js         # Admin user management
-└── docs/                   # Documentation
-    ├── VERIFICATION_SYSTEM.md
-    ├── DEPLOYMENT.md
-    └── BRANCHING_STRATEGY.md
+openLibraryChecklist/
+├── server.js                  # Main Express server
+├── lib/
+│   └── password.js            # Salted scrypt password hashing
+├── test/
+│   └── password.test.js       # Unit tests
+├── public/                    # Server-version static assets
+│   ├── index.html
+│   ├── css/style.css
+│   ├── js/app.js
+│   └── uploads/               # User-uploaded images
+├── static-version/            # Standalone browser-only build
+├── scripts/                   # Utility scripts
+│   ├── populate-libraries.js  # Seed the database
+│   ├── setup-admin.js         # Manage admin users
+│   └── deploy.sh
+├── BRANCHING_STRATEGY.md
+├── DEPLOYMENT.md
+├── VERIFICATION_SYSTEM.md
+└── GITHUB_SETUP.md
 ```
 
-## 🔧 API Endpoints
+## 🔧 API Endpoints (server version)
 
 ### Libraries
-- `GET /api/libraries` - Get all libraries
-- `GET /api/libraries/:id` - Get specific library
-- `POST /api/libraries` - Submit new library (requires verification)
-- `GET /api/search` - Search libraries
+- `GET /api/libraries` — list all libraries
+- `GET /api/libraries/:id` — get a specific library
+- `POST /api/libraries` — submit a new library (goes to the pending queue)
+- `GET /api/search` — search libraries
+- `GET /api/counties` — distinct counties
+- `GET /api/library-systems` — library systems with counts
 
-### User Management
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/users/:id` - Get user profile
-- `GET /api/users/:id/stats` - Get user statistics
+### User management
+- `POST /api/auth/register` — register
+- `POST /api/auth/login` — log in
+- `GET /api/users/:id` — profile
+- `GET /api/users/:id/stats` — statistics
+- `GET /api/users/:id/visits` — visit history
+- `GET /api/users/:id/goals` — library goals
 
-### Admin Functions
-- `GET /api/admin/pending-libraries` - Get pending submissions
-- `POST /api/admin/pending-libraries/:id/approve` - Approve library
-- `POST /api/admin/pending-libraries/:id/reject` - Reject library
-- `POST /api/users/:id/toggle-admin` - Toggle admin mode
+### Admin
+- `GET /api/admin/pending-libraries` — pending submissions
+- `POST /api/admin/pending-libraries/:id/approve` — approve
+- `POST /api/admin/pending-libraries/:id/reject` — reject
+- `POST /api/users/:id/toggle-admin` — toggle admin mode
 
-## 🎯 Key Features in Detail
+## 🔒 Security Notes
 
-### Library Verification System
-- **User Submissions**: New libraries go to pending status
-- **Admin Review**: Admins can approve/reject with notes
-- **Quality Control**: Prevents spam and ensures accuracy
-- **Audit Trail**: Complete history of submissions and reviews
-
-### User Experience
-- **Responsive Design**: Works on desktop and mobile
-- **Real-time Updates**: Live notifications and status changes
-- **Intuitive Interface**: Clean, modern UI with smooth interactions
-- **Progress Tracking**: Visual indicators for user goals
-
-### Admin Panel
-- **Pending Reviews**: Easy-to-use interface for library submissions
-- **User Management**: View and manage admin users
-- **Toggle Admin Mode**: Enable/disable admin privileges
-- **Statistics Dashboard**: Overview of system activity
+- Passwords in the server version are hashed with salted **scrypt** (Node's built-in `crypto`); plaintext passwords are never stored.
+- `helmet` sets a Content Security Policy and other protective headers.
+- The static version stores all data locally in the browser and sends nothing to a server.
 
 ## 🚀 Deployment
 
-### Dreamhost Apps Deployment
-This app is designed to be deployed on Dreamhost Apps for free hosting. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
-
-### Other Hosting Options
-- **Heroku**: Compatible with Heroku's free tier
-- **Vercel**: Can be adapted for serverless deployment
-- **Railway**: Easy deployment with automatic scaling
+- **Server version:** see [DEPLOYMENT.md](DEPLOYMENT.md). Compatible with Dreamhost Apps, Heroku, Railway, and similar Node hosts.
+- **Static version:** deploy the `static-version/` folder to GitHub Pages, Netlify, or Vercel.
 
 ## 🤝 Contributing
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit your changes**: `git commit -m 'Add amazing feature'`
-4. **Push to the branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push the branch: `git push origin feature/amazing-feature`
+5. Open a pull request
 
-### Development Guidelines
-- Follow existing code style
-- Add tests for new features
+### Guidelines
+- Follow the existing code style
+- Add tests for new backend logic and ensure `npm test` passes
 - Update documentation as needed
-- Ensure all tests pass before submitting
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under the MIT License — see [LICENSE](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- **California Public Libraries**: For providing the foundation data
-- **Open Source Community**: For the amazing tools and libraries
-- **Library Enthusiasts**: For inspiration and feedback
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/california-library-tracker/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/california-library-tracker/discussions)
-- **Email**: [Your Email]
+- California public libraries for the underlying data
+- The open-source community for the tools that make this possible
 
 ---
 
-**Made with ❤️ for California's library community**
-
-*Help us build the most comprehensive library tracking system in California!* 
+*Help build a comprehensive library tracking tool for California's library community.*
