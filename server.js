@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const { hashPassword, verifyPassword } = require('./lib/password');
 const { getAdminRole, requireAdmin: makeRequireAdmin, canManageAdmins, createRateLimiter } = require('./lib/auth');
 const { signToken, verifyToken } = require('./lib/token');
+const { validateLibrary, validateVisit, validateRegistration } = require('./lib/validation');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -325,14 +326,19 @@ app.get('/api/libraries/:id', (req, res) => {
 
 // Add new library (now goes to pending for verification)
 app.post('/api/libraries', (req, res) => {
-  const { name, library_system, branch_name, address, city, county, zip_code, phone, website, latitude, longitude, submitted_by } = req.body;
-  
+  const { errors, value } = validateLibrary(req.body);
+  if (errors.length > 0) {
+    res.status(400).json({ error: 'Validation failed', details: errors });
+    return;
+  }
+
+  const submitted_by = req.body.submitted_by;
   const query = `
     INSERT INTO pending_libraries (name, library_system, branch_name, address, city, county, zip_code, phone, website, latitude, longitude, submitted_by)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  
-  db.run(query, [name, library_system, branch_name, address, city, county, zip_code, phone, website, latitude, longitude, submitted_by], function(err) {
+
+  db.run(query, [value.name, value.library_system, value.branch_name, value.address, value.city, value.county, value.zip_code, value.phone, value.website, value.latitude, value.longitude, submitted_by], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -640,14 +646,19 @@ app.get('/api/libraries/:id/visits', (req, res) => {
 // Add visit to a library
 app.post('/api/libraries/:id/visits', (req, res) => {
   const libraryId = req.params.id;
-  const { user_id, visitor_name, notes, rating } = req.body;
-  
+  const { errors, value } = validateVisit(req.body);
+  if (errors.length > 0) {
+    res.status(400).json({ error: 'Validation failed', details: errors });
+    return;
+  }
+
+  const user_id = req.body.user_id;
   const query = `
     INSERT INTO visits (library_id, user_id, visitor_name, notes, rating)
     VALUES (?, ?, ?, ?, ?)
   `;
-  
-  db.run(query, [libraryId, user_id, visitor_name, notes, rating], function(err) {
+
+  db.run(query, [libraryId, user_id, value.visitor_name, value.notes, value.rating], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -723,12 +734,13 @@ app.get('/api/counties', (req, res) => {
 
 // Register new user
 app.post('/api/auth/register', authLimiter, async (req, res) => {
-  const { username, email, password, display_name } = req.body;
-
-  if (!username || !password) {
-    res.status(400).json({ error: 'Username and password are required' });
+  const { errors, value } = validateRegistration(req.body);
+  if (errors.length > 0) {
+    res.status(400).json({ error: 'Validation failed', details: errors });
     return;
   }
+
+  const { username, email, password, display_name } = value;
 
   let password_hash;
   try {
@@ -743,7 +755,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
     VALUES (?, ?, ?, ?)
   `;
 
-  db.run(query, [username, email, password_hash, display_name], function(err) {
+  db.run(query, [username, email || null, password_hash, display_name], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE constraint failed')) {
         res.status(400).json({ error: 'Username or email already exists' });
