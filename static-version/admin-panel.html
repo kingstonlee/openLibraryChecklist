@@ -258,6 +258,7 @@
         </div>
     </div>
 
+    <script src="escape.js"></script>
     <script src="data.js"></script>
     <script src="library-updater.js"></script>
     <script src="app.js"></script>
@@ -271,7 +272,7 @@
             activityLog.push(logEntry);
             
             const logElement = document.getElementById('activityLog');
-            logElement.innerHTML = activityLog.join('<br>');
+            logElement.innerHTML = activityLog.map(escapeHtml).join('<br>');
             logElement.scrollTop = logElement.scrollHeight;
             
             console.log(logEntry);
@@ -279,7 +280,8 @@
         
         function showStatus(message, type = 'info') {
             const statusElement = document.getElementById('updateStatus');
-            statusElement.innerHTML = `<div class="status ${type}">${message}</div>`;
+            const safeType = ['info', 'success', 'error', 'warning'].includes(type) ? type : 'info';
+            statusElement.innerHTML = `<div class="status ${safeType}">${escapeHtml(message)}</div>`;
         }
         
         // Statistics
@@ -334,7 +336,7 @@
                 historyElement.innerHTML = history.map(update => `
                     <div class="update-item">
                         <div class="update-info">
-                            <strong>${update.version}</strong> - ${update.name} (${update.libraryCount} libraries)
+                            <strong>${escapeHtml(update.version)}</strong> - ${escapeHtml(update.name)} (${escapeHtml(update.libraryCount)} libraries)
                         </div>
                         <span class="update-status ${update.applied ? 'applied' : 'pending'}">
                             ${update.applied ? 'Applied' : 'Pending'}
