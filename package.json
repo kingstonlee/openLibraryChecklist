@@ -13,12 +13,12 @@
     "format:check": "npx --yes prettier@3 --check ."
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
     "compression": "^1.7.4",
-    "dotenv": "^16.3.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "multer": "^2.2.0"
   },
   "optionalDependencies": {
     "sharp": "^0.32.6",
@@ -46,4 +46,4 @@
   },
   "homepage": "https://github.com/kingstonlee/openLibraryChecklist#readme",
   "license": "MIT"
-} 
+}

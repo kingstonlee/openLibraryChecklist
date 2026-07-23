@@ -21,7 +21,10 @@ const NODE_GLOBALS = {
   setInterval: 'readonly',
   clearInterval: 'readonly',
   URL: 'readonly',
-  fetch: 'readonly'
+  fetch: 'readonly',
+  FormData: 'readonly',
+  Blob: 'readonly',
+  Uint8Array: 'readonly'
 };
 
 const BROWSER_GLOBALS = {
