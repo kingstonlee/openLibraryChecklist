@@ -157,7 +157,9 @@ openLibraryChecklist/
 ## 🔒 Security Notes
 
 - Passwords in the server version are hashed with salted **scrypt** (Node's built-in `crypto`); plaintext passwords are never stored.
-- Admin endpoints (`/api/admin/*`, `toggle-admin`) require the acting user to be an admin (sent via the `x-user-id` header); granting admin additionally requires an existing admin or a configured `ADMIN_SETUP_TOKEN`. Bootstrap the first admin with `scripts/setup-admin.js`.
+- Login issues a signed session token (HMAC-SHA256 via Node's `crypto`, keyed by `SESSION_SECRET`). The client returns it as an `Authorization: Bearer` token, and the server derives the acting user from the verified token — so an identity can't be forged by setting a header.
+- Admin endpoints (`/api/admin/*`, `toggle-admin`) require the acting user to be an admin; granting admin additionally requires an existing admin or a configured `ADMIN_SETUP_TOKEN`. Bootstrap the first admin with `scripts/setup-admin.js`.
+- CORS is restricted to the origins listed in `CORS_ORIGINS` (cross-origin requests are otherwise not granted access).
 - Authentication endpoints are rate-limited to slow down brute-force attempts.
 - User-supplied content is HTML-escaped in the front-end before rendering to prevent stored XSS.
 - `helmet` sets a Content Security Policy and other protective headers.
