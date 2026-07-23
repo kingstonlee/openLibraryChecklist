@@ -185,7 +185,7 @@ openLibraryChecklist/
 ## 🚀 Deployment
 
 - **Server version:** see [DEPLOYMENT.md](DEPLOYMENT.md). Compatible with Dreamhost Apps, Heroku, Railway, and similar Node hosts.
-- **Static version:** deploy the `static-version/` folder to GitHub Pages, Netlify, or Vercel.
+- **Static version:** deploy the `static-version/` folder to GitHub Pages, Netlify, or Vercel. A ready-made GitHub Pages workflow is included at [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). One-time setup: in **Settings → Pages**, set the source to **GitHub Actions**, then run the "Deploy static site" workflow from the Actions tab. To deploy automatically on every push to `main`, uncomment the `push` trigger in that workflow.
 
 ## 🤝 Contributing
 

@@ -1,0 +1,48 @@
+name: Deploy static site
+
+# Publishes the browser-only build in static-version/ to GitHub Pages.
+#
+# One-time setup: in the repository, go to Settings → Pages and set
+# "Build and deployment" → Source to "GitHub Actions". Then run this workflow
+# from the Actions tab (Run workflow). To deploy automatically on every push to
+# main afterwards, uncomment the `push` trigger below.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'static-version/**'
+  #     - '.github/workflows/deploy-pages.yml'
+
+# Permissions required by the Pages deployment action.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static-version as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: static-version
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
