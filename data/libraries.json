@@ -1,6 +1,4 @@
-// AUTO-GENERATED from data/libraries.json by scripts/generate-static-data.js.
-// Do not edit by hand — edit data/libraries.json and run: npm run generate:data
-const CALIFORNIA_LIBRARIES = [
+[
   {
     "name": "Los Angeles Public Library - Central Library",
     "library_system": "Los Angeles Public Library",
@@ -1223,9 +1221,4 @@ const CALIFORNIA_LIBRARIES = [
     "latitude": 33.1192,
     "longitude": -117.0864
   }
-];
-
-// Export for use in other files / tests.
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CALIFORNIA_LIBRARIES };
-}
+]
