@@ -15,7 +15,7 @@ A web application for tracking and exploring California public libraries. It shi
 ## ✨ Features
 
 ### 🏛️ Library Management
-- Curated database of California public libraries (94 in the server build, 29 preset in the static build)
+- Curated database of 94 California public libraries, single-sourced in [`data/libraries.json`](data/libraries.json) and shared by both builds
 - Organized by library system and branch
 - Search and filter by name, county, or library system
 
@@ -134,8 +134,11 @@ openLibraryChecklist/
 │   ├── js/app.js
 │   └── uploads/               # User-uploaded images
 ├── static-version/            # Standalone browser-only build
+├── data/
+│   └── libraries.json         # Canonical library dataset (source of truth)
 ├── scripts/                   # Utility scripts
-│   ├── populate-libraries.js  # Seed the database
+│   ├── populate-libraries.js  # Seed the database from data/libraries.json
+│   ├── generate-static-data.js # Regenerate static-version/data.js from the JSON
 │   ├── setup-admin.js         # Manage admin users
 │   └── deploy.sh
 ├── BRANCHING_STRATEGY.md
