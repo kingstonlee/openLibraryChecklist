@@ -97,11 +97,17 @@ Open http://localhost:8000. See [`static-version/README.md`](static-version/READ
 
 ## 🧪 Tests
 
-Unit tests run on Node's built-in test runner (no extra dependencies):
+Tests run on Node's built-in test runner. Unit tests (password, tokens, auth,
+validation, escaping) need no dependencies; the HTTP route tests drive the real
+Express app with an injected fake database, so install the runtime deps first:
 
 ```bash
+npm ci --omit=optional   # installs express etc.; skips native sharp/sqlite3
 npm test
 ```
+
+`sharp` and `sqlite3` are optional dependencies (used for image processing and
+the database at runtime); the app module loads and is testable without them.
 
 Lint and format (ESLint / Prettier, fetched on demand via `npx`):
 

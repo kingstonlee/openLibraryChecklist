@@ -2,8 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const multer = require('multer');
-const sharp = require('sharp');
-const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -17,6 +15,11 @@ const { validateLibrary, validateVisit, validateRegistration } = require('./lib/
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// The SQLite handle. Assigned by initDatabase() when run as a server, or
+// injected by tests via setDatabaseForTest(). Route handlers read it at
+// request time, so it need not exist when routes are registered.
+let db;
 
 // Secret used to sign session tokens. Prefer a stable value from the
 // environment so tokens survive restarts; fall back to an ephemeral random
@@ -83,11 +86,19 @@ const authLimiter = createRateLimiter({
   message: 'Too many authentication attempts. Please try again in a few minutes.'
 });
 
-// Database setup
-const db = new sqlite3.Database('./library.db');
+// Database setup: create the SQLite handle and ensure the schema exists.
+// sqlite3 is required lazily so the app module can be loaded (e.g. by tests
+// with an injected database) without the native module installed.
+function initDatabase(filename = './library.db') {
+  const sqlite3 = require('sqlite3').verbose();
+  const database = new sqlite3.Database(filename);
+  createSchema(database);
+  return database;
+}
 
-// Create tables
-db.serialize(() => {
+function createSchema(db) {
+  // Create tables
+  db.serialize(() => {
   // Users table for authentication and tracking
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -190,13 +201,11 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
   )`);
-});
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  });
 }
+
+// Uploads directory (created on startup in the run-as-main block below).
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
 
 // Multer configuration for image uploads
 const storage = multer.diskStorage({
@@ -224,8 +233,10 @@ const upload = multer({
 });
 
 // Authorization: middleware guarding admin-only routes (see lib/auth.js).
-// The acting user is resolved from the verified session token.
-const requireAdmin = makeRequireAdmin(db, getActingUserId);
+// The acting user is resolved from the verified session token. A thin proxy
+// forwards to whatever db is current, so binding works before initDatabase().
+const dbProxy = { get: (...args) => db.get(...args) };
+const requireAdmin = makeRequireAdmin(dbProxy, getActingUserId);
 
 // Routes
 
@@ -590,6 +601,16 @@ app.post('/api/libraries/:id/images', upload.single('image'), async (req, res) =
     
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Image processing depends on the optional `sharp` module. If it is not
+    // installed, fail cleanly instead of crashing.
+    let sharp;
+    try {
+      sharp = require('sharp');
+    } catch (_err) {
+      fs.unlinkSync(req.file.path);
+      return res.status(503).json({ error: 'Image processing is unavailable on this server' });
     }
 
     // Process image with Sharp
@@ -985,7 +1006,25 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Library tracking app running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to view the app`);
-}); 
+// Inject a database handle (used by tests to run the app without sqlite3).
+function setDatabaseForTest(instance) {
+  db = instance;
+}
+
+// Only create a real database and start listening when run directly, so the
+// module can be imported by tests without side effects.
+if (require.main === module) {
+  db = initDatabase();
+
+  // Ensure uploads directory exists
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Library tracking app running on port ${PORT}`);
+    console.log(`Visit http://localhost:${PORT} to view the app`);
+  });
+}
+
+module.exports = { app, initDatabase, setDatabaseForTest }; 
