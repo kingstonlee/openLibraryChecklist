@@ -240,56 +240,79 @@ const api = {
     },
     
     async getPendingLibraries() {
-        const response = await fetch('/api/admin/pending-libraries');
+        const response = await fetch('/api/admin/pending-libraries', {
+            headers: authHeaders()
+        });
         return await response.json();
     },
-    
+
     async approveLibrary(libraryId, adminData) {
         const response = await fetch(`/api/admin/pending-libraries/${libraryId}/approve`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...authHeaders()
             },
             body: JSON.stringify(adminData)
         });
         return await response.json();
     },
-    
+
     async rejectLibrary(libraryId, adminData) {
         const response = await fetch(`/api/admin/pending-libraries/${libraryId}/reject`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...authHeaders()
             },
             body: JSON.stringify(adminData)
         });
         return await response.json();
     },
-    
+
     async getUserPendingLibraries(userId) {
         const response = await fetch(`/api/users/${userId}/pending-libraries`);
         return await response.json();
     },
-    
+
     async toggleAdminMode(userId, action, role = 'admin') {
         const response = await fetch(`/api/users/${userId}/toggle-admin`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...authHeaders()
             },
             body: JSON.stringify({ action, role })
         });
         return await response.json();
     },
-    
+
     async getAllAdminUsers() {
-        const response = await fetch('/api/admin/users');
+        const response = await fetch('/api/admin/users', {
+            headers: authHeaders()
+        });
         return await response.json();
     }
 };
 
+// Identify the acting user to the server for admin-only endpoints.
+function authHeaders() {
+    return currentUser && currentUser.id ? { 'x-user-id': String(currentUser.id) } : {};
+}
+
 // Utility functions
 const utils = {
+    // Escape user-supplied text before inserting it into innerHTML to prevent XSS.
+    escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    },
+
     showLoading() {
         elements.loading.style.display = 'block';
         elements.librariesGrid.style.display = 'none';
@@ -497,9 +520,9 @@ const userManager = {
         
         profileContent.innerHTML = `
             <div class="user-profile-header">
-                <h2>${currentUser.display_name || currentUser.username}</h2>
-                <p class="user-email">${currentUser.email}</p>
-                <p class="user-joined">Member since ${utils.formatDate(currentUser.created_at)}</p>
+                <h2>${utils.escapeHtml(currentUser.display_name || currentUser.username)}</h2>
+                <p class="user-email">${utils.escapeHtml(currentUser.email)}</p>
+                <p class="user-joined">Member since ${utils.escapeHtml(utils.formatDate(currentUser.created_at))}</p>
             </div>
             
             <div class="user-stats-grid">
@@ -583,13 +606,13 @@ const userManager = {
         }
         
         return currentUser.goals.slice(0, 5).map(goal => `
-            <div class="goal-item ${goal.status}">
+            <div class="goal-item ${utils.escapeHtml(goal.status)}">
                 <div class="goal-info">
-                    <div class="goal-library">${goal.library_name}</div>
-                    <div class="goal-location">${goal.city}, ${goal.county}</div>
+                    <div class="goal-library">${utils.escapeHtml(goal.library_name)}</div>
+                    <div class="goal-location">${utils.escapeHtml(goal.city)}, ${utils.escapeHtml(goal.county)}</div>
                 </div>
                 <div class="goal-status">
-                    <span class="status-badge ${goal.status}">${goal.status}</span>
+                    <span class="status-badge ${utils.escapeHtml(goal.status)}">${utils.escapeHtml(goal.status)}</span>
                 </div>
             </div>
         `).join('');
@@ -602,9 +625,9 @@ const userManager = {
         
         return currentUser.visits.slice(0, 5).map(visit => `
             <div class="recent-visit-item">
-                <div class="visit-library">${visit.library_name}</div>
-                <div class="visit-date">${utils.formatDate(visit.visit_date)}</div>
-                ${visit.rating ? `<div class="visit-rating">⭐ ${visit.rating}/5</div>` : ''}
+                <div class="visit-library">${utils.escapeHtml(visit.library_name)}</div>
+                <div class="visit-date">${utils.escapeHtml(utils.formatDate(visit.visit_date))}</div>
+                ${visit.rating ? `<div class="visit-rating">⭐ ${utils.escapeHtml(visit.rating)}/5</div>` : ''}
             </div>
         `).join('');
     },
@@ -615,14 +638,14 @@ const userManager = {
         }
         
         return currentUser.pendingLibraries.map(library => `
-            <div class="pending-submission-item ${library.status}">
+            <div class="pending-submission-item ${utils.escapeHtml(library.status)}">
                 <div class="submission-info">
-                    <div class="submission-name">${library.name}</div>
-                    <div class="submission-location">${library.city}, ${library.county}</div>
-                    <div class="submission-date">Submitted: ${utils.formatDate(library.submitted_at)}</div>
+                    <div class="submission-name">${utils.escapeHtml(library.name)}</div>
+                    <div class="submission-location">${utils.escapeHtml(library.city)}, ${utils.escapeHtml(library.county)}</div>
+                    <div class="submission-date">Submitted: ${utils.escapeHtml(utils.formatDate(library.submitted_at))}</div>
                 </div>
                 <div class="submission-status">
-                    <span class="status-badge ${library.status}">${library.status}</span>
+                    <span class="status-badge ${utils.escapeHtml(library.status)}">${utils.escapeHtml(library.status)}</span>
                 </div>
             </div>
         `).join('');
@@ -661,13 +684,13 @@ const adminManager = {
                 ${libraries.map(library => `
                     <div class="pending-library-item">
                         <div class="library-details">
-                            <h4>${library.name}</h4>
-                            <p><strong>System:</strong> ${library.library_system || 'N/A'}</p>
-                            <p><strong>Branch:</strong> ${library.branch_name || 'N/A'}</p>
-                            <p><strong>Address:</strong> ${library.address || 'N/A'}</p>
-                            <p><strong>City:</strong> ${library.city}, ${library.county}</p>
-                            <p><strong>Submitted by:</strong> ${library.submitted_by_name || library.submitted_by_username}</p>
-                            <p><strong>Date:</strong> ${utils.formatDate(library.submitted_at)}</p>
+                            <h4>${utils.escapeHtml(library.name)}</h4>
+                            <p><strong>System:</strong> ${utils.escapeHtml(library.library_system || 'N/A')}</p>
+                            <p><strong>Branch:</strong> ${utils.escapeHtml(library.branch_name || 'N/A')}</p>
+                            <p><strong>Address:</strong> ${utils.escapeHtml(library.address || 'N/A')}</p>
+                            <p><strong>City:</strong> ${utils.escapeHtml(library.city)}, ${utils.escapeHtml(library.county)}</p>
+                            <p><strong>Submitted by:</strong> ${utils.escapeHtml(library.submitted_by_name || library.submitted_by_username)}</p>
+                            <p><strong>Date:</strong> ${utils.escapeHtml(utils.formatDate(library.submitted_at))}</p>
                         </div>
                         <div class="admin-actions">
                             <button class="btn btn-success" onclick="adminManager.approveLibrary(${library.id})">
@@ -778,11 +801,11 @@ const adminManager = {
                 ${users.map(user => `
                     <div class="admin-user-item">
                         <div class="user-details">
-                            <h4>${user.display_name || user.username}</h4>
-                            <p><strong>Username:</strong> ${user.username}</p>
-                            <p><strong>Email:</strong> ${user.email}</p>
-                            <p><strong>Role:</strong> ${user.role}</p>
-                            <p><strong>Admin since:</strong> ${utils.formatDate(user.created_at)}</p>
+                            <h4>${utils.escapeHtml(user.display_name || user.username)}</h4>
+                            <p><strong>Username:</strong> ${utils.escapeHtml(user.username)}</p>
+                            <p><strong>Email:</strong> ${utils.escapeHtml(user.email)}</p>
+                            <p><strong>Role:</strong> ${utils.escapeHtml(user.role)}</p>
+                            <p><strong>Admin since:</strong> ${utils.escapeHtml(utils.formatDate(user.created_at))}</p>
                         </div>
                         <div class="admin-user-actions">
                             ${user.user_id !== currentUser.id ? `
@@ -871,7 +894,7 @@ const libraryManager = {
         elements.librariesGrid.innerHTML = Object.entries(groupedLibraries).map(([system, branches]) => `
             <div class="library-system-group">
                 <div class="system-header">
-                    <h3 class="system-name">${system}</h3>
+                    <h3 class="system-name">${utils.escapeHtml(system)}</h3>
                     <div class="system-stats">
                         <span>${branches.length} branch${branches.length > 1 ? 'es' : ''}</span>
                         <span>•</span>
@@ -885,9 +908,9 @@ const libraryManager = {
                         <div class="library-card" data-id="${library.id}">
                             <div class="library-header">
                                 <div>
-                                    <div class="library-name">${library.branch_name || library.name}</div>
-                                    <div class="library-location">${library.city}, ${library.county}</div>
-                                    ${library.branch_name ? `<div class="library-system">${library.library_system}</div>` : ''}
+                                    <div class="library-name">${utils.escapeHtml(library.branch_name || library.name)}</div>
+                                    <div class="library-location">${utils.escapeHtml(library.city)}, ${utils.escapeHtml(library.county)}</div>
+                                    ${library.branch_name ? `<div class="library-system">${utils.escapeHtml(library.library_system)}</div>` : ''}
                                 </div>
                             </div>
                             <div class="library-stats">
@@ -942,7 +965,7 @@ const libraryManager = {
         if (!elements.librarySystemFilter) return;
         
         elements.librarySystemFilter.innerHTML = '<option value="">All Library Systems</option>' +
-            librarySystems.map(system => `<option value="${system.library_system}">${system.library_system} (${system.branch_count} branches)</option>`).join('');
+            librarySystems.map(system => `<option value="${utils.escapeHtml(system.library_system)}">${utils.escapeHtml(system.library_system)} (${system.branch_count} branches)</option>`).join('');
     },
     
     updateStats() {
@@ -1009,11 +1032,11 @@ const libraryManager = {
         
         elements.imagesGrid.innerHTML = images.map(image => `
             <div class="image-item">
-                <img src="/uploads/${image.filename}" alt="${image.description || 'Library image'}" loading="lazy">
+                <img src="/uploads/${encodeURIComponent(image.filename)}" alt="${utils.escapeHtml(image.description || 'Library image')}" loading="lazy">
                 <div class="image-info">
-                    <div class="image-description">${image.description || 'No description'}</div>
+                    <div class="image-description">${utils.escapeHtml(image.description || 'No description')}</div>
                     <div class="image-meta">
-                        By ${image.uploaded_by || 'Anonymous'} • ${utils.formatDate(image.created_at)}
+                        By ${utils.escapeHtml(image.uploaded_by || 'Anonymous')} • ${utils.escapeHtml(utils.formatDate(image.created_at))}
                     </div>
                 </div>
             </div>
@@ -1039,10 +1062,10 @@ const libraryManager = {
         elements.visitsList.innerHTML = visits.map(visit => `
             <div class="visit-item">
                 <div class="visit-header">
-                    <div class="visit-name">${visit.visitor_name || 'Anonymous'}</div>
-                    <div class="visit-date">${utils.formatDate(visit.visit_date)}</div>
+                    <div class="visit-name">${utils.escapeHtml(visit.visitor_name || 'Anonymous')}</div>
+                    <div class="visit-date">${utils.escapeHtml(utils.formatDate(visit.visit_date))}</div>
                 </div>
-                <div class="visit-notes">${visit.notes || 'No notes provided.'}</div>
+                <div class="visit-notes">${utils.escapeHtml(visit.notes || 'No notes provided.')}</div>
             </div>
         `).join('');
     }
@@ -1183,7 +1206,7 @@ const countyManager = {
     
     renderCounties() {
         elements.countyFilter.innerHTML = '<option value="">All Counties</option>' +
-            counties.map(county => `<option value="${county}">${county}</option>`).join('');
+            counties.map(county => `<option value="${utils.escapeHtml(county)}">${utils.escapeHtml(county)}</option>`).join('');
     }
 };
 

@@ -31,6 +31,40 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Simple in-memory rate limiter (no external dependency). Limits requests per
+// client IP within a rolling time window. Suitable for a single-process app;
+// swap for a shared store if you run multiple instances.
+function createRateLimiter({ windowMs, max, message }) {
+  const hits = new Map();
+  return (req, res, next) => {
+    const now = Date.now();
+    const key = req.ip || req.connection?.remoteAddress || 'unknown';
+    const timestamps = (hits.get(key) || []).filter((t) => now - t < windowMs);
+    timestamps.push(now);
+    hits.set(key, timestamps);
+
+    // Opportunistic cleanup so the map doesn't grow unbounded.
+    if (hits.size > 5000) {
+      for (const [k, ts] of hits) {
+        if (ts.every((t) => now - t >= windowMs)) hits.delete(k);
+      }
+    }
+
+    if (timestamps.length > max) {
+      res.status(429).json({ error: message || 'Too many requests, please try again later.' });
+      return;
+    }
+    next();
+  };
+}
+
+// Cap authentication attempts to slow down brute-force / credential stuffing.
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: 'Too many authentication attempts. Please try again in a few minutes.'
+});
+
 // Database setup
 const db = new sqlite3.Database('./library.db');
 
@@ -171,6 +205,50 @@ const upload = multer({
   }
 });
 
+// Authorization helpers
+
+// Look up whether a user id has an admin_users row. Resolves with the role
+// string (e.g. 'admin' / 'moderator') or null.
+function getAdminRole(userId) {
+  return new Promise((resolve, reject) => {
+    if (!userId) {
+      resolve(null);
+      return;
+    }
+    db.get('SELECT role FROM admin_users WHERE user_id = ?', [userId], (err, admin) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(admin ? admin.role : null);
+    });
+  });
+}
+
+// Middleware guarding admin-only routes. The acting user is identified by the
+// `x-user-id` header and must have an admin_users row. This is intentionally
+// lightweight (there is no session/token layer in this app) but it closes the
+// hole where admin endpoints were completely unauthenticated.
+async function requireAdmin(req, res, next) {
+  const actingUserId = req.get('x-user-id');
+  if (!actingUserId) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  try {
+    const role = await getAdminRole(actingUserId);
+    if (!role) {
+      res.status(403).json({ error: 'Admin access required' });
+      return;
+    }
+    req.actingUserId = actingUserId;
+    req.actingRole = role;
+    next();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 // Routes
 
 // Home page
@@ -287,7 +365,7 @@ app.post('/api/libraries', (req, res) => {
 });
 
 // Get pending libraries (admin only)
-app.get('/api/admin/pending-libraries', (req, res) => {
+app.get('/api/admin/pending-libraries', requireAdmin, (req, res) => {
   const query = `
     SELECT p.*, u.username as submitted_by_username, u.display_name as submitted_by_name
     FROM pending_libraries p
@@ -306,10 +384,11 @@ app.get('/api/admin/pending-libraries', (req, res) => {
 });
 
 // Approve pending library
-app.post('/api/admin/pending-libraries/:id/approve', (req, res) => {
+app.post('/api/admin/pending-libraries/:id/approve', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { reviewed_by, admin_notes } = req.body;
-  
+  const { admin_notes } = req.body;
+  const reviewed_by = req.actingUserId;
+
   // First, get the pending library details
   db.get('SELECT * FROM pending_libraries WHERE id = ?', [id], (err, pending) => {
     if (err) {
@@ -356,10 +435,11 @@ app.post('/api/admin/pending-libraries/:id/approve', (req, res) => {
 });
 
 // Reject pending library
-app.post('/api/admin/pending-libraries/:id/reject', (req, res) => {
+app.post('/api/admin/pending-libraries/:id/reject', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { reviewed_by, admin_notes } = req.body;
-  
+  const { admin_notes } = req.body;
+  const reviewed_by = req.actingUserId;
+
   const query = `
     UPDATE pending_libraries 
     SET status = 'rejected', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, admin_notes = ?
@@ -412,54 +492,84 @@ app.get('/api/users/:id/admin-status', (req, res) => {
   });
 });
 
-// Toggle admin mode for a user
-app.post('/api/users/:id/toggle-admin', (req, res) => {
+// Grant or revoke admin status for a user.
+//
+// Granting admin is privileged: the caller must either already be an admin
+// (identified by the `x-user-id` header) or present a valid ADMIN_SETUP_TOKEN
+// (via the `x-admin-setup-token` header). This removes the previous behaviour
+// where any anonymous request could promote itself to admin. Bootstrap the
+// first admin with scripts/setup-admin.js or by configuring ADMIN_SETUP_TOKEN.
+app.post('/api/users/:id/toggle-admin', async (req, res) => {
   const userId = req.params.id;
   const { action, role = 'admin' } = req.body; // action: 'enable' or 'disable'
-  
+
+  if (action !== 'enable' && action !== 'disable') {
+    res.status(400).json({ error: 'Invalid action. Use "enable" or "disable"' });
+    return;
+  }
+
+  // Authorize the caller.
+  let callerIsAdmin = false;
+  try {
+    callerIsAdmin = !!(await getAdminRole(req.get('x-user-id')));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+    return;
+  }
+
+  const setupToken = process.env.ADMIN_SETUP_TOKEN;
+  const providedToken = req.get('x-admin-setup-token');
+  const hasValidSetupToken = !!setupToken && providedToken === setupToken;
+
+  if (!callerIsAdmin && !hasValidSetupToken) {
+    res.status(403).json({
+      error: 'Granting or revoking admin requires an existing admin or a valid setup token'
+    });
+    return;
+  }
+
   if (action === 'enable') {
-    // Check if user already has admin status
+    // Allow only a whitelisted set of roles.
+    const requestedRole = role === 'moderator' ? 'moderator' : 'admin';
+
     db.get('SELECT * FROM admin_users WHERE user_id = ?', [userId], (err, existingAdmin) => {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
-      
+
       if (existingAdmin) {
         res.json({ message: 'User is already an admin', isAdmin: true, role: existingAdmin.role });
         return;
       }
-      
-      // Make user an admin
-      db.run('INSERT INTO admin_users (user_id, role) VALUES (?, ?)', [userId, role], function(err) {
+
+      db.run('INSERT INTO admin_users (user_id, role) VALUES (?, ?)', [userId, requestedRole], function(err) {
         if (err) {
           res.status(500).json({ error: err.message });
           return;
         }
-        res.json({ message: 'Admin mode enabled', isAdmin: true, role });
+        res.json({ message: 'Admin mode enabled', isAdmin: true, role: requestedRole });
       });
     });
-  } else if (action === 'disable') {
+  } else {
     // Remove admin status
     db.run('DELETE FROM admin_users WHERE user_id = ?', [userId], function(err) {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
-      
+
       if (this.changes > 0) {
         res.json({ message: 'Admin mode disabled', isAdmin: false, role: null });
       } else {
         res.json({ message: 'User was not an admin', isAdmin: false, role: null });
       }
     });
-  } else {
-    res.status(400).json({ error: 'Invalid action. Use "enable" or "disable"' });
   }
 });
 
 // Get all admin users (for admin management)
-app.get('/api/admin/users', (req, res) => {
+app.get('/api/admin/users', requireAdmin, (req, res) => {
   const query = `
     SELECT a.*, u.username, u.display_name, u.email, u.created_at as user_created_at
     FROM admin_users a
@@ -635,7 +745,7 @@ app.get('/api/counties', (req, res) => {
 // User Authentication Routes
 
 // Register new user
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authLimiter, async (req, res) => {
   const { username, email, password, display_name } = req.body;
 
   if (!username || !password) {
@@ -670,7 +780,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // Login user
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authLimiter, (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
