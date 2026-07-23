@@ -343,14 +343,32 @@ const utils = {
 
 // Modal management
 const modalManager = {
+    lastFocused: null,
+
     open(modal) {
+        // Remember what had focus so we can restore it on close.
+        this.lastFocused = document.activeElement;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        // Move focus into the dialog for keyboard and screen-reader users.
+        if (typeof a11y !== 'undefined') {
+            const focusable = a11y.getFocusable(modal);
+            if (focusable.length > 0) {
+                focusable[0].focus();
+            }
+        }
     },
-    
+
     close(modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
+
+        // Restore focus to the element that opened the modal.
+        if (this.lastFocused && typeof this.lastFocused.focus === 'function') {
+            this.lastFocused.focus();
+            this.lastFocused = null;
+        }
     },
     
     closeAll() {
@@ -956,6 +974,18 @@ function initEventListeners() {
             }
         });
     });
+
+    // Keyboard accessibility: Escape closes the open modal, Tab is trapped
+    // within it (see a11y.js).
+    if (typeof a11y !== 'undefined') {
+        document.addEventListener('keydown', (e) => {
+            a11y.handleModalKeydown(e, {
+                getActiveModal: () => document.querySelector('.modal.active'),
+                close: (modal) => modalManager.close(modal),
+                doc: document
+            });
+        });
+    }
     
     // Initialize view buttons (Grid/List)
 function initViewButtons() {
