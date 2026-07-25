@@ -315,18 +315,27 @@ const utils = {
         }
     },
     
-    showNotification(message, type = 'success') {
+    showNotification(message, type = 'success', duration = 3000) {
+        // Fall back to a styled type so the toast is never invisible.
+        const knownTypes = ['success', 'error', 'info', 'warning'];
+        const safeType = knownTypes.includes(type) ? type : 'info';
+
         const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
+        notification.className = `notification notification-${safeType}`;
+        notification.setAttribute('role', 'status');
         notification.textContent = message;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => notification.classList.add('show'), 100);
         setTimeout(() => {
             notification.classList.remove('show');
-            setTimeout(() => document.body.removeChild(notification), 300);
-        }, 3000);
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
     },
     
     // Simple hash function for passwords
@@ -1190,9 +1199,17 @@ notificationStyles.textContent = `
     .notification-success {
         background: #48bb78;
     }
-    
+
     .notification-error {
         background: #f56565;
+    }
+
+    .notification-info {
+        background: #4299e1;
+    }
+
+    .notification-warning {
+        background: #ed8936;
     }
 `;
 document.head.appendChild(notificationStyles);
