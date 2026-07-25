@@ -607,6 +607,22 @@ const libraryManager = {
             elements.librariesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     },
+
+    // Render the SVG map of all libraries into the map modal and wire dot clicks.
+    renderMap() {
+        const body = document.getElementById('mapBody');
+        if (!body || typeof libraryMap === 'undefined') return;
+
+        body.innerHTML = libraryMap.buildMapSvg(libraries);
+
+        body.querySelectorAll('.map-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const id = parseInt(dot.getAttribute('data-id'), 10);
+                modalManager.close(document.getElementById('mapModal'));
+                this.openLibraryDetail(id);
+            });
+        });
+    },
     
     async openLibraryDetail(libraryId) {
         try {
@@ -958,6 +974,15 @@ function initEventListeners() {
     elements.userProfileBtn.addEventListener('click', () => modalManager.open(elements.userProfileModal));
     elements.logoutBtn.addEventListener('click', () => userManager.logout());
     
+    // Map view
+    const mapBtn = document.getElementById('mapBtn');
+    const closeMapModal = document.getElementById('closeMapModal');
+    if (mapBtn) mapBtn.addEventListener('click', () => {
+        libraryManager.renderMap();
+        modalManager.open(document.getElementById('mapModal'));
+    });
+    if (closeMapModal) closeMapModal.addEventListener('click', () => modalManager.close(document.getElementById('mapModal')));
+
     // Sync functionality
     const syncBtn = document.getElementById('syncBtn');
     const closeSyncModal = document.getElementById('closeSyncModal');

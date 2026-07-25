@@ -7,6 +7,7 @@ A **completely static** version of the California Library Tracker that runs enti
 ### 🏛️ **Library Management**
 - **Add Libraries**: Add new libraries directly in the browser
 - **Search & Filter**: Find libraries by name, county, or library system
+- **Map View**: See every library plotted on a California map (self-contained SVG, no external map service); click a dot to open its details
 - **Library Details**: View complete library information
 - **Statistics**: Real-time stats on libraries, images, visits, and users
 

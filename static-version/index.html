@@ -18,6 +18,7 @@
                     <div class="tagline">Track your library visits - No account required!</div>
                 </h1>
                 <div class="header-actions">
+                    <button id="mapBtn" class="btn btn-outline" title="View libraries on a map">🗺️ Map</button>
                     <button id="syncBtn" class="btn btn-outline" title="Data Sync & Backup">📱 Sync</button>
                     <button id="loginBtn" class="btn btn-outline">Login</button>
                     <button id="registerBtn" class="btn btn-outline">Register</button>
@@ -432,7 +433,22 @@
         </div>
     </div>
 
+    <!-- Map Modal -->
+    <div class="modal" role="dialog" aria-modal="true" id="mapModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>🗺️ Library Map</h2>
+                <button class="modal-close" aria-label="Close" id="closeMapModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="map-hint">Each dot is a library — click one to see its details.</p>
+                <div id="mapBody" class="map-body"><!-- SVG map rendered here --></div>
+            </div>
+        </div>
+    </div>
+
     <script src="a11y.js"></script>
+    <script src="map.js"></script>
     <script src="paginate.js"></script>
     <script src="data.js"></script>
     <script src="library-updater.js"></script>
