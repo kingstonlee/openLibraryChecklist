@@ -1264,3 +1264,35 @@ body {
 .sync-status .status-error {
     color: #dc3545;
 } 
+/* Library pagination */
+.library-pager {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 8px;
+}
+
+.library-pager .pager-summary {
+    color: #f7fafc;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.library-pager .pager-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.library-pager .pager-status {
+    color: #f7fafc;
+    font-weight: 600;
+    min-width: 120px;
+    text-align: center;
+}
+
+.library-pager button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

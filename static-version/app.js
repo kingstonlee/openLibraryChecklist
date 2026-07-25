@@ -499,8 +499,15 @@ const userManager = {
     }
 };
 
+// Number of library cards shown per page.
+const LIBRARIES_PER_PAGE = 24;
+
 // Library management
 const libraryManager = {
+    // The list currently being displayed (all or filtered) and the active page.
+    displayedLibraries: [],
+    currentPage: 1,
+
     async loadLibraries() {
         try {
             utils.showLoading();
@@ -515,13 +522,21 @@ const libraryManager = {
         }
     },
     
-    renderLibraries(librariesToRender) {
+    renderLibraries(librariesToRender, page = 1) {
+        // A new result set (or the first render) resets to page 1; paging
+        // through the same set preserves it.
+        this.displayedLibraries = librariesToRender;
+
         if (librariesToRender.length === 0) {
             elements.librariesGrid.innerHTML = '<p class="no-libraries">No libraries found. Add the first one!</p>';
+            this.renderPager({ total: 0, page: 1, totalPages: 1, start: 0, end: 0 });
             return;
         }
-        
-        elements.librariesGrid.innerHTML = librariesToRender.map(library => `
+
+        const result = paginate(librariesToRender, page, LIBRARIES_PER_PAGE);
+        this.currentPage = result.page;
+
+        elements.librariesGrid.innerHTML = result.items.map(library => `
             <div class="library-card">
                 <div class="library-info">
                     <div class="library-header">
@@ -545,6 +560,52 @@ const libraryManager = {
                 </div>
             </div>
         `).join('');
+
+        this.renderPager(result);
+    },
+
+    // Render the "showing X–Y of Z" summary and Prev/Next controls.
+    renderPager(result) {
+        let pager = document.getElementById('libraryPager');
+        if (!pager) {
+            pager = document.createElement('div');
+            pager.id = 'libraryPager';
+            pager.className = 'library-pager';
+            elements.librariesGrid.insertAdjacentElement('afterend', pager);
+        }
+
+        if (result.total === 0) {
+            pager.innerHTML = '';
+            return;
+        }
+
+        const from = result.start + 1;
+        const to = result.end;
+        const controls = result.totalPages > 1
+            ? `
+                <button class="btn btn-secondary" id="pagerPrev" ${result.page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+                <span class="pager-status">Page ${result.page} of ${result.totalPages}</span>
+                <button class="btn btn-secondary" id="pagerNext" ${result.page >= result.totalPages ? 'disabled' : ''}>Next ›</button>
+              `
+            : '';
+
+        pager.innerHTML = `
+            <div class="pager-summary">Showing ${from}–${to} of ${result.total} libraries</div>
+            <div class="pager-controls">${controls}</div>
+        `;
+
+        const prev = document.getElementById('pagerPrev');
+        const next = document.getElementById('pagerNext');
+        if (prev) prev.addEventListener('click', () => this.goToPage(this.currentPage - 1));
+        if (next) next.addEventListener('click', () => this.goToPage(this.currentPage + 1));
+    },
+
+    // Re-render the current result set at a different page and scroll up.
+    goToPage(page) {
+        this.renderLibraries(this.displayedLibraries, page);
+        if (elements.librariesGrid && elements.librariesGrid.scrollIntoView) {
+            elements.librariesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     },
     
     async openLibraryDetail(libraryId) {
